@@ -1,0 +1,63 @@
+:root {
+    --menu-bg: #4a4a4a;
+    --menu-text: #ffffff;
+    --primary-btn-bg: #32CD32;
+    --primary-btn-text: #ffffff;
+}
+
+.navbar,
+.navbar-nav,
+.navbar .navbar-collapse,
+.navbar .navbar-menu {
+    background-color: var(--menu-bg) !important;
+}
+
+.navbar a,
+.navbar-nav .nav-link,
+.nav-item a {
+    color: var(--menu-text) !important;
+}
+
+.navbar a:hover,
+.navbar-nav .nav-link:hover,
+.nav-item a:hover {
+    opacity: 0.8;
+}
+
+.dropdown-menu {
+    background-color: var(--menu-bg) !important;
+}
+
+.dropdown-menu .dropdown-item {
+    color: var(--menu-text) !important;
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.sidebar,
+.sidebar-menu {
+    background-color: var(--menu-bg) !important;
+}
+
+.sidebar a {
+    color: var(--menu-text) !important;
+}
+
+.sidebar a:hover {
+    opacity: 0.8;
+}
+
+.btn-primary {
+    background-color: var(--primary-btn-bg) !important;
+    border-color: var(--primary-btn-bg) !important;
+    color: var(--primary-btn-text) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: #28a428 !important;
+    border-color: #28a428 !important;
+}

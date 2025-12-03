@@ -13,7 +13,10 @@
     <h4>Meine Projekte</h4>
     <div class="list-group mb-4">
         {% for p in my_projects %}
-        <a href="{{ url_for('view_project', project_id=p.id) }}" class="list-group-item list-group-item-action">{{ p.title }}</a>
+        <a href="{{ url_for('view_project', project_id=p.id) }}" class="list-group-item list-group-item-action">
+            {{ p.title }}<br>
+            <small>{{ p.description }}</small>
+        </a>
         {% endfor %}
         {% if not my_projects %}<div class="text-muted p-2">Keine eigenen Projekte.</div>{% endif %}
     </div>

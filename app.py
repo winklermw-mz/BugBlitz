@@ -15,7 +15,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- ASSOCIATION TABLES ---
 
 user_roles = db.Table('user_roles',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
@@ -27,7 +26,6 @@ case_tags = db.Table('case_tags',
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
 )
 
-# --- MODELLE ---
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -109,7 +107,6 @@ class TestStepResult(db.Model):
     status = db.Column(db.String(50))
     comment = db.Column(db.Text)
 
-# --- HELPER ---
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -118,13 +115,11 @@ def load_user(user_id):
 def create_initial_data():
     with app.app_context():
         db.create_all()
-        # Rollen anlegen
         for r_name in ['admin', 'manager', 'tester']:
             if not Role.query.filter_by(name=r_name).first():
                 db.session.add(Role(name=r_name))
         db.session.commit()
 
-        # Admin User
         if not User.query.filter_by(username='admin').first():
             hashed_pw = generate_password_hash('admin', method='scrypt')
             admin_user = User(username='admin', password_hash=hashed_pw)
@@ -134,7 +129,6 @@ def create_initial_data():
             db.session.commit()
             print("Admin 'admin' erstellt.")
 
-# --- ROUTEN ---
 
 @app.route('/')
 @login_required
@@ -143,13 +137,11 @@ def dashboard():
         projects = Project.query.all()
         return render_template('dashboard.html', all_projects=projects)
     
-    # Manager: Eigene + Alle anderen (read only)
     if current_user.has_role('manager'):
         my_projects = Project.query.filter_by(owner_id=current_user.id).all()
         other_projects = Project.query.filter(Project.owner_id != current_user.id).all()
         return render_template('dashboard.html', my_projects=my_projects, other_projects=other_projects)
     
-    # Reine Tester
     projects = Project.query.all()
     return render_template('dashboard.html', all_projects=projects)
 
@@ -169,7 +161,6 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# -- User Management --
 @app.route('/admin/users', methods=['GET', 'POST'])
 @login_required
 def admin_users():
@@ -199,7 +190,6 @@ def admin_users():
     all_roles = Role.query.all()
     return render_template('admin.html', users=users, all_roles=all_roles)
 
-# -- Project --
 @app.route('/project/new', methods=['GET', 'POST'])
 @login_required
 def create_project():
@@ -225,16 +215,7 @@ def delete_project(project_id):
 @login_required
 def view_project(project_id):
     project = Project.query.get_or_404(project_id)
-    
-    # NEU: Sortierung der Testfälle nach dem neuen Feld 'sequence'
-    # Fallback-Sortierung nach ID, falls sequence gleich ist.
-    sorted_cases = TestCase.query.filter_by(project_id=project_id) \
-                                 .order_by(TestCase.sequence.asc(), TestCase.id.asc()) \
-                                 .all()
-    
-    # Wichtig: Wir übergeben die Liste als 'sorted_cases' an das Template, wie zuvor festgelegt.
-    # Die Prioritäts-Sortierlogik ist damit entfernt.
-    
+    sorted_cases = TestCase.query.filter_by(project_id=project_id).order_by(TestCase.sequence.asc(), TestCase.id.asc()).all()
     return render_template('project_view.html', project=project, sorted_cases=sorted_cases)
 
 # -- Cases --
@@ -256,7 +237,6 @@ def manage_case(project_id, case_id=None):
         case.priority = request.form.get('priority')
         case.source = request.form.get('source')
         
-        # Tags verarbeiten
         tag_names = [t.strip() for t in request.form.get('tags', '').split(' ') if t.strip()]
         case.tags = []
         for t_name in tag_names:
@@ -267,22 +247,20 @@ def manage_case(project_id, case_id=None):
             case.tags.append(tag)
 
         db.session.add(case)
-        db.session.commit() # ID für Steps notwendig
+        db.session.commit()
         
-        # Steps neu aufbauen (einfachste Art für Sortierung/Löschen)
         TestStep.query.filter_by(test_case_id=case.id).delete()
         actions = request.form.getlist('action[]')
         results = request.form.getlist('result[]')
         
         for idx, (act, res) in enumerate(zip(actions, results)):
-            if act.strip() or res.strip(): # Leere ignorieren
+            if act.strip() or res.strip():
                 step = TestStep(test_case_id=case.id, step_number=idx+1, action=act, expected_result=res)
                 db.session.add(step)
         
         db.session.commit()
         return redirect(url_for('view_project', project_id=project.id))
 
-    # Existing tags for autocomplete
     all_tags = [t.name for t in Tag.query.all()]
     return render_template('case_form.html', project=project, case=case, all_tags=all_tags)
 
@@ -295,30 +273,21 @@ def delete_case(case_id):
     db.session.commit()
     return redirect(url_for('view_project', project_id=case.project_id))
 
-# NEUE ROUTE zum Sortieren von Testfällen
 @app.route('/case/<int:case_id>/sort/<direction>', methods=['POST'])
 @login_required
 def sort_case(case_id, direction):
     current_case = TestCase.query.get_or_404(case_id)
     project = current_case.project
     
-    # Berechtigung prüfen
     if not (current_user.is_admin() or (current_user.has_role('manager') and project.owner_id == current_user.id)):
         abort(403)
 
-    # Alle Testfälle des Projekts, sortiert nach aktueller Reihenfolge
-    sorted_cases = TestCase.query.filter_by(project_id=project.id) \
-                                 .order_by(TestCase.sequence.asc(), TestCase.id.asc()) \
-                                 .all()
+    sorted_cases = TestCase.query.filter_by(project_id=project.id).order_by(TestCase.sequence.asc(), TestCase.id.asc()).all()
     
-    # Finde den Index des aktuellen Testfalls
     current_index = [i for i, case in enumerate(sorted_cases) if case.id == case_id][0]
 
     if direction == 'up' and current_index > 0:
-        # Tausche mit dem vorherigen Element
         prev_case = sorted_cases[current_index - 1]
-        
-        # Tausche die Sequence-Werte
         temp_sequence = current_case.sequence
         current_case.sequence = prev_case.sequence
         prev_case.sequence = temp_sequence
@@ -327,10 +296,7 @@ def sort_case(case_id, direction):
         flash(f'Testfall "{current_case.title}" wurde nach oben verschoben.')
         
     elif direction == 'down' and current_index < len(sorted_cases) - 1:
-        # Tausche mit dem nächsten Element
         next_case = sorted_cases[current_index + 1]
-        
-        # Tausche die Sequence-Werte
         temp_sequence = current_case.sequence
         current_case.sequence = next_case.sequence
         next_case.sequence = temp_sequence
@@ -340,7 +306,6 @@ def sort_case(case_id, direction):
         
     return redirect(url_for('view_project', project_id=project.id))
 
-# -- Test Runs --
 @app.route('/project/<int:project_id>/run/new', methods=['GET', 'POST'])
 @login_required
 def create_run(project_id):
@@ -357,8 +322,6 @@ def create_run(project_id):
         db.session.add(run)
         db.session.commit()
         
-        # Matrix-Zuweisung: Cases vs Testers
-        # Form-Daten Struktur: assignment_case_ID -> Liste von TesterIDs
         for key in request.form:
             if key.startswith('assign_case_'):
                 case_id = int(key.replace('assign_case_', ''))
@@ -370,7 +333,6 @@ def create_run(project_id):
         db.session.commit()
         return redirect(url_for('view_project', project_id=project.id))
 
-    # Tester finden (alle die Rolle 'tester' haben oder Manager/Admin die testen wollen)
     potential_testers = User.query.filter(User.roles.any(Role.name.in_(['tester', 'manager', 'admin']))).all()
     return render_template('run_form.html', project=project, testers=potential_testers)
 
@@ -391,14 +353,11 @@ def update_run_status(run_id):
 def execute_run(run_id):
     run = TestRun.query.get_or_404(run_id)
     
-    # Sichtbarkeit
     if current_user.is_admin() or current_user.has_role('manager'):
         assignments = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
     else:
-        # Tester sieht nur seine Assignments
         assignments = TestRunAssignment.query.filter_by(test_run_id=run.id, tester_id=current_user.id).all()
 
-    # Statistik berechnen
     all_assigns = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
     stats = {'total': len(all_assigns), 'ok': 0, 'fehlgeschlagen': 0, 'blockiert': 0, 'nicht getestet': 0}
     for a in all_assigns:
@@ -406,11 +365,9 @@ def execute_run(run_id):
         else: stats['nicht getestet'] += 1
 
     if request.method == 'POST':
-        # Ergebnis speichern
         assign_id = request.form.get('assignment_id')
         assignment = TestRunAssignment.query.get(assign_id)
         
-        # Berechtigung prüfen (Admin/Manager darf alles, Tester nur seins wenn aktiv)
         allowed = current_user.is_admin() or \
                   (current_user.has_role('manager') and run.project.owner_id == current_user.id) or \
                   (current_user.id == assignment.tester_id and run.status == 'active')
@@ -419,13 +376,10 @@ def execute_run(run_id):
             assignment.result = request.form.get('status')
             assignment.comment = request.form.get('comment')
             
-            # Step Results speichern
-            # Format: step_status_STEPNUMMER und step_comment_STEPNUMMER
             for step in assignment.test_case.steps:
                 s_status = request.form.get(f'step_status_{step.step_number}')
                 s_comment = request.form.get(f'step_comment_{step.step_number}')
                 
-                # Check existierendes Result
                 step_res = TestStepResult.query.filter_by(assignment_id=assignment.id, step_number=step.step_number).first()
                 if not step_res:
                     step_res = TestStepResult(assignment_id=assignment.id, step_number=step.step_number)
@@ -436,7 +390,7 @@ def execute_run(run_id):
                 
             db.session.commit()
             flash('Ergebnis gespeichert.')
-            return redirect(url_for('execute_run', run_id=run.id)) # Refresh für Stats
+            return redirect(url_for('execute_run', run_id=run.id))
 
     return render_template('execute.html', run=run, assignments=assignments, stats=stats)
 

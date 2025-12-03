@@ -14,7 +14,7 @@
             <div class="card-header d-flex justify-content-between">
                 <span>Testfälle</span>
                 {% if current_user.id == project.owner_id %}
-                <a href="{{ url_for('manage_case', project_id=project.id) }}" class="btn btn-sm btn-success">Neu</a>
+                <a href="{{ url_for('manage_case', project_id=project.id) }}" class="btn btn-sm btn-success">+ Neuer Testfall</a>
                 {% endif %}
             </div>
             <ul class="list-group list-group-flush">
@@ -23,8 +23,20 @@
                     <div>
                         <span class="badge text-dark border ms-1 me-2">{{ case.sequence }}</span>
                         
-                        <strong>{{ case.title }}</strong> 
+                        <strong>{{ case.title }}</strong>
+
+                        {% if case.priority == "hoch" %}
+                        <span class="badge bg-danger">{{ case.priority }}</span>
+                        {% endif %}
+
+                        {% if case.priority == "mittel" %}
+                        <span class="badge bg-warning">{{ case.priority }}</span>
+                        {% endif %}
+
+                        {% if case.priority == "niedrig" %}
                         <span class="badge bg-info">{{ case.priority }}</span>
+                        {% endif %}
+                        
                         {% for t in case.tags %}<span class="badge bg-light text-dark border ms-1">{{ t.name }}</span>{% endfor %}
                         <br><small>{{ case.summary }}</small>
                     </div>
@@ -39,7 +51,7 @@
                             <button type="submit" class="btn btn-sm btn-outline-dark" title="Nach unten verschieben" {% if loop.last %}disabled{% endif %}>⬇</button>
                         </form>
                         
-                        <a href="{{ url_for('manage_case', project_id=project.id, case_id=case.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="{{ url_for('manage_case', project_id=project.id, case_id=case.id) }}" class="btn btn-sm btn-outline-primary">Öffnen</a>
                         <form action="{{ url_for('delete_case', case_id=case.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Wirklich löschen?');">
                             <button type="submit" class="btn btn-sm btn-outline-danger">X</button>
                         </form>
@@ -56,7 +68,7 @@
             <div class="card-header d-flex justify-content-between">
                 <span>Testrunden</span>
                 {% if current_user.id == project.owner_id %}
-                <a href="{{ url_for('create_run', project_id=project.id) }}" class="btn btn-sm btn-warning">Planen</a>
+                <a href="{{ url_for('create_run', project_id=project.id) }}" class="btn btn-sm btn-success">+ Neuer Testplan</a>
                 {% endif %}
             </div>
             <ul class="list-group list-group-flush">
