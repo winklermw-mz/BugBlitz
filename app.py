@@ -16,16 +16,17 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
-user_roles = db.Table('user_roles',
+user_roles = db.Table(
+    'user_roles',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('role_id', db.Integer, db.ForeignKey('role.id'))
 )
 
-case_tags = db.Table('case_tags',
+case_tags = db.Table(
+    'case_tags',
     db.Column('case_id', db.Integer, db.ForeignKey('test_case.id')),
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
 )
-
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -116,8 +117,7 @@ def create_initial_data():
     with app.app_context():
         db.create_all()
         for r_name in ['admin', 'manager', 'tester']:
-            if not Role.query.filter_by(name=r_name).first():
-                db.session.add(Role(name=r_name))
+            if not Role.query.filter_by(name=r_name).first(): db.session.add(Role(name=r_name))
         db.session.commit()
 
         if not User.query.filter_by(username='admin').first():
@@ -128,7 +128,6 @@ def create_initial_data():
             db.session.add(admin_user)
             db.session.commit()
             print("Admin 'admin' erstellt.")
-
 
 @app.route('/')
 @login_required
@@ -231,13 +230,12 @@ def view_project(project_id):
         for a in all_assigns:
             if a.result in stats: stats[a.result] += 1
             else: stats['nicht getestet'] += 1
-        stats["Erledigung"] = 0 if len(all_assigns) == 0 else int(round(100 * stats['nicht getestet'] / len(all_assigns), 0))
+        stats["Erledigung"] = 0 if len(all_assigns) == 0 else int(round(100 * (len(all_assigns) - stats['nicht getestet']) / len(all_assigns), 0))
         statistics[run.id] = stats
     print(statistics)
 
     return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics)
 
-# -- Cases --
 @app.route('/project/<int:project_id>/case/new', methods=['GET', 'POST'])
 @app.route('/project/<int:project_id>/case/<int:case_id>/edit', methods=['GET', 'POST'])
 @login_required
