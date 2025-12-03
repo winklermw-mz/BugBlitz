@@ -61,3 +61,7 @@
     background-color: #28a428 !important;
     border-color: #28a428 !important;
 }
+
+.bg-opaque {
+    opacity: 0.6;
+}

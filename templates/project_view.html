@@ -76,8 +76,32 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <strong>{{ run.title }}</strong> 
-                        <span class="badge bg-secondary">{{ run.status }}</span>
-                        <br><small>{{ run.start_date }} bis {{ run.end_date }}</small>
+                        <span class="badge bg-secondary bg-opaque">{{ run.status }}</span>
+                        <br>
+                        <small>{{ run.start_date }} bis {{ run.end_date }}<br>
+                        {% if run.id in statistics %}
+                            {% for key, value in statistics[run.id].items() %}
+                                {% if key == "Anzahl Testfälle" %}
+                                    {{ key }}: {{ value }}, Ergebnisse: 
+                                {% endif %}    
+                                {% if key == "Erledigung" %}
+                                    {{ value }}%<br>
+                                {% endif %}    
+                                {% if key == "ok" %}
+                                    <span class="badge bg-success bg-opaque">{{ value }}</span>
+                                {% endif %}    
+                                {% if key == "fehlgeschlagen" %}
+                                    <span class="badge bg-danger bg-opaque">{{ value }}</span>
+                                {% endif %}    
+                                {% if key == "blockiert" %}
+                                    <span class="badge bg-warning bg-opaque">{{ value }}</span>
+                                {% endif %}    
+                                {% if key == "nicht getestet" %}
+                                    <span class="badge bg-secondary bg-opaque">{{ value }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        </small>
                     </div>
                     <a href="{{ url_for('execute_run', run_id=run.id) }}" class="btn btn-sm btn-outline-primary">Öffnen</a>
                 </li>

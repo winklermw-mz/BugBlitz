@@ -216,7 +216,26 @@ def delete_project(project_id):
 def view_project(project_id):
     project = Project.query.get_or_404(project_id)
     sorted_cases = TestCase.query.filter_by(project_id=project_id).order_by(TestCase.sequence.asc(), TestCase.id.asc()).all()
-    return render_template('project_view.html', project=project, sorted_cases=sorted_cases)
+
+    statistics = {}
+    for run in project.test_runs:
+        all_assigns = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
+        stats = {
+            'Anzahl Testfälle': len(all_assigns), 
+            'Erledigung': 0, 
+            'ok': 0, 
+            'fehlgeschlagen': 0, 
+            'blockiert': 0, 
+            'nicht getestet': 0,
+        }
+        for a in all_assigns:
+            if a.result in stats: stats[a.result] += 1
+            else: stats['nicht getestet'] += 1
+        stats["Erledigung"] = 0 if len(all_assigns) == 0 else int(round(100 * stats['nicht getestet'] / len(all_assigns), 0))
+        statistics[run.id] = stats
+    print(statistics)
+
+    return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics)
 
 # -- Cases --
 @app.route('/project/<int:project_id>/case/new', methods=['GET', 'POST'])
