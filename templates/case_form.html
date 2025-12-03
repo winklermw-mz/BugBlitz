@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ 'Testfall bearbeiten' if case.id else 'Neuer Testfall' }}</h2>
+<form method="POST">
+    <div class="row">
+        <div class="col-md-8 mb-3"><label>Titel</label><input type="text" name="title" class="form-control" value="{{ case.title or '' }}" required></div>
+        <div class="col-md-4 mb-3">
+            <label>Priorität</label>
+            <select name="priority" class="form-select">
+                <option value="hoch" {% if case.priority=='hoch' %}selected{% endif %}>Hoch</option>
+                <option value="mittel" {% if case.priority=='mittel' %}selected{% endif %}>Mittel</option>
+                <option value="niedrig" {% if case.priority=='niedrig' %}selected{% endif %}>Niedrig</option>
+            </select>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label>Tags</label>
+        <input type="text" name="tags" class="form-control" list="tagList" value="{{ case.tags|map(attribute='name')|join(' ') }}">
+        <datalist id="tagList">
+            {% for t in all_tags %}<option value="{{ t }}">{% endfor %}
+        </datalist>
+    </div>
+    <div class="mb-3"><label>Zusammenfassung</label><input type="text" name="summary" class="form-control" value="{{ case.summary or '' }}"></div>
+    <div class="row">
+        <div class="col-md-6 mb-3"><label>Vorbedingung</label><textarea name="precondition" class="form-control">{{ case.precondition or '' }}</textarea></div>
+        <div class="col-md-6 mb-3"><label>Nachbedingung</label><textarea name="postcondition" class="form-control">{{ case.postcondition or '' }}</textarea></div>
+    </div>
+    <div class="mb-3"><label>Quelle</label><input type="text" name="source" class="form-control" value="{{ case.source or '' }}"></div>
+    
+    <h4>Testschritte</h4>
+    <table class="table" id="stepsTable">
+        <thead><tr><th width="5%">#</th><th>Aktion</th><th>Erwartetes Ergebnis</th><th>Aktion</th></tr></thead>
+        <tbody>
+            {% for step in case.steps %}
+            <tr>
+                <td class="step-idx">{{ loop.index }}</td>
+                <td><input type="text" name="action[]" class="form-control" value="{{ step.action }}" required></td>
+                <td><input type="text" name="result[]" class="form-control" value="{{ step.expected_result }}" required></td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="moveRow(this, -1)">⬆</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="moveRow(this, 1)">⬇</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(this)">X</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td class="step-idx">1</td>
+                <td><input type="text" name="action[]" class="form-control" required></td>
+                <td><input type="text" name="result[]" class="form-control" required></td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="moveRow(this, -1)">⬆</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="moveRow(this, 1)">⬇</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(this)">X</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="addStep()">+ Schritt</button>
+    <br>
+    <button type="submit" class="btn btn-primary">Speichern</button>
+    <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-light">Abbrechen</a>
+</form>
+
+<script>
+function updateIndices() {
+    let rows = document.querySelectorAll("#stepsTable tbody tr");
+    rows.forEach((row, index) => {
+        row.querySelector(".step-idx").innerText = index + 1;
+    });
+}
+function addStep() {
+    let tbody = document.querySelector("#stepsTable tbody");
+    let row = tbody.rows[0].cloneNode(true);
+    row.querySelectorAll("input").forEach(i => i.value = "");
+    tbody.appendChild(row);
+    updateIndices();
+}
+function deleteRow(btn) {
+    let row = btn.closest("tr");
+    if(document.querySelectorAll("#stepsTable tbody tr").length > 1) {
+        row.remove();
+        updateIndices();
+    } else {
+        row.querySelectorAll("input").forEach(i => i.value = "");
+    }
+}
+function moveRow(btn, direction) {
+    let row = btn.closest("tr");
+    let tbody = row.parentNode;
+    if (direction === -1 && row.previousElementSibling) {
+        tbody.insertBefore(row, row.previousElementSibling);
+    } else if (direction === 1 && row.nextElementSibling) {
+        tbody.insertBefore(row.nextElementSibling, row);
+    }
+    updateIndices();
+}
+</script>
+{% endblock %}

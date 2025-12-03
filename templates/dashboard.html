@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Projektübersicht</h2>
+    
+    {% if current_user.has_role('manager') or current_user.is_admin() %}
+    <a href="{{ url_for('create_project') }}" class="btn btn-primary">+ Neues Projekt</a>
+    {% endif %}
+</div>
+
+{% if current_user.has_role('manager') and not current_user.is_admin() %}
+    
+    <h4>Meine Projekte (Schreibrechte)</h4>
+    <div class="list-group mb-4">
+        {% for p in my_projects %}
+        <a href="{{ url_for('view_project', project_id=p.id) }}" class="list-group-item list-group-item-action">{{ p.title }}</a>
+        {% endfor %}
+        {% if not my_projects %}<div class="text-muted p-2">Keine eigenen Projekte.</div>{% endif %}
+    </div>
+    
+    <h4>Andere Projekte (Read-Only)</h4>
+    <div class="list-group">
+        {% for p in other_projects %}
+        <a href="{{ url_for('view_project', project_id=p.id) }}" class="list-group-item list-group-item-action">{{ p.title }} (von {{ p.owner.username }})</a>
+        {% endfor %}
+    </div>
+
+{% else %}
+    <div class="list-group">
+        {% for p in all_projects %}
+        <a href="{{ url_for('view_project', project_id=p.id) }}" class="list-group-item list-group-item-action">
+            {{ p.title }} 
+            <span class="badge bg-light text-dark float-end">Owner: {{ p.owner.username }}</span>
+        </a>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

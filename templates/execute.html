@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2>{{ run.title }}</h2>
+        <span class="badge {{ 'bg-success' if run.status == 'active' else 'bg-secondary' }}">
+            Status: {{ run.status|upper }}
+        </span>
+    </div>
+    {% if current_user.is_admin() or (current_user.has_role('manager') and run.project.owner_id == current_user.id) %}
+    <form method="POST" action="{{ url_for('update_run_status', run_id=run.id) }}" class="d-flex gap-2">
+        {% if run.status == 'active' %}
+            <button name="status" value="finished" class="btn btn-success">Beenden</button>
+            <button name="status" value="aborted" class="btn btn-danger">Abbrechen</button>
+        {% else %}
+            <button name="status" value="active" class="btn btn-outline-primary">Wiedereröffnen</button>
+        {% endif %}
+    </form>
+    {% endif %}
+</div>
+
+<div class="card mb-4">
+    <div class="card-body d-flex justify-content-around text-center">
+        <div><strong>Gesamt</strong><h3>{{ stats['total'] }}</h3></div>
+        <div class="text-success"><strong>OK</strong><h3>{{ stats['ok'] }}</h3></div>
+        <div class="text-danger"><strong>Fehlgeschlagen</strong><h3>{{ stats['fehlgeschlagen'] }}</h3></div>
+        <div class="text-warning"><strong>Blockiert</strong><h3>{{ stats['blockiert'] }}</h3></div>
+        <div class="text-muted"><strong>Offen</strong><h3>{{ stats['nicht getestet'] }}</h3></div>
+    </div>
+</div>
+
+<div class="accordion" id="accordionCases">
+    {% for assign in assignments %}
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c{{ assign.id }}">
+                <span class="badge me-2 
+                    {% if assign.result == 'ok' %}bg-success
+                    {% elif assign.result == 'fehlgeschlagen' %}bg-danger
+                    {% elif assign.result == 'blockiert' %}bg-warning
+                    {% else %}bg-secondary{% endif %}">
+                    {{ assign.result }}
+                </span>
+                {{ assign.test_case.title }} &nbsp; <small class="text-muted">(Tester: {{ assign.tester.username }})</small>
+            </button>
+        </h2>
+        <div id="c{{ assign.id }}" class="accordion-collapse collapse" data-bs-parent="#accordionCases">
+            <div class="accordion-body">
+                <form method="POST">
+                    <input type="hidden" name="assignment_id" value="{{ assign.id }}">
+                    
+                    <p><strong>Titel:</strong> {{ assign.test_case.title }} {% for t in assign.test_case.tags %}<span class="badge bg-light text-dark border">{{ t.name }}</span> {% endfor %}</p>
+                    <p><strong>Zuammenfassung:</strong> {{ assign.test_case.summary }}</p>
+                    <p><strong>Vorbedingung:</strong> {{ assign.test_case.precondition }}</p>
+                    <p><strong>Nachbedingung:</strong> {{ assign.test_case.postcondition }}</p>
+
+                    <div class="mb-3">
+                        <div class="mt-2" id="steps{{ assign.id }}">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light"><tr><th>#</th><th>Aktion</th><th>Erwartung</th><th width="30%">Ergebnis (Optional)</th></tr></thead>
+                                <tbody>
+                                    {% for step in assign.test_case.steps %}
+                                    {% set step_res = assign.step_results | selectattr("step_number", "equalto", step.step_number) | first %}
+                                    <tr>
+                                        <td>{{ step.step_number }}</td>
+                                        <td>{{ step.action }}</td>
+                                        <td>{{ step.expected_result }}</td>
+                                        <td>
+                                            {% if run.status == 'active' and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.has_role('manager')) %}
+                                            <select name="step_status_{{ step.step_number }}" class="form-select form-select-sm mb-1">
+                                                <option value="">- Status -</option>
+                                                <option value="ok" {% if step_res and step_res.status=='ok' %}selected{% endif %}>OK</option>
+                                                <option value="fail" {% if step_res and step_res.status=='fail' %}selected{% endif %}>Fail</option>
+                                            </select>
+                                            <input type="text" name="step_comment_{{ step.step_number }}" class="form-control form-control-sm" placeholder="Kommentar" value="{{ step_res.comment if step_res else '' }}">
+                                            {% else %}
+                                                {% if step_res %}
+                                                    <strong>{{ step_res.status }}</strong>: {{ step_res.comment }}
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if run.status == 'active' and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.has_role('manager')) %}
+                    <div class="bg-light p-3 rounded">
+                        <label class="form-label fw-bold">Gesamtergebnis Testfall</label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <select name="status" class="form-select">
+                                    <option value="ok" {% if assign.result == 'ok' %}selected{% endif %}>OK</option>
+                                    <option value="fehlgeschlagen" {% if assign.result == 'fehlgeschlagen' %}selected{% endif %}>Fehlgeschlagen</option>
+                                    <option value="blockiert" {% if assign.result == 'blockiert' %}selected{% endif %}>Blockiert</option>
+                                    <option value="nicht getestet" {% if assign.result == 'nicht getestet' %}selected{% endif %}>Nicht getestet</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" name="comment" class="form-control" placeholder="Hauptkommentar" value="{{ assign.comment or '' }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Speichern</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <strong>Ergebnis:</strong> {{ assign.result }} <br>
+                        <strong>Kommentar:</strong> {{ assign.comment }}
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
