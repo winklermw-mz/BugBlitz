@@ -59,6 +59,7 @@ class Project(db.Model):
 class TestCase(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    sequence = db.Column(db.Integer, default=0)
     title = db.Column(db.String(150), nullable=False)
     summary = db.Column(db.Text)
     precondition = db.Column(db.Text)
@@ -224,7 +225,17 @@ def delete_project(project_id):
 @login_required
 def view_project(project_id):
     project = Project.query.get_or_404(project_id)
-    return render_template('project_view.html', project=project)
+    
+    # NEU: Sortierung der Testfälle nach dem neuen Feld 'sequence'
+    # Fallback-Sortierung nach ID, falls sequence gleich ist.
+    sorted_cases = TestCase.query.filter_by(project_id=project_id) \
+                                 .order_by(TestCase.sequence.asc(), TestCase.id.asc()) \
+                                 .all()
+    
+    # Wichtig: Wir übergeben die Liste als 'sorted_cases' an das Template, wie zuvor festgelegt.
+    # Die Prioritäts-Sortierlogik ist damit entfernt.
+    
+    return render_template('project_view.html', project=project, sorted_cases=sorted_cases)
 
 # -- Cases --
 @app.route('/project/<int:project_id>/case/new', methods=['GET', 'POST'])
@@ -237,6 +248,7 @@ def manage_case(project_id, case_id=None):
     case = TestCase.query.get(case_id) if case_id else TestCase(project_id=project.id)
 
     if request.method == 'POST':
+        case.sequence = int(request.form.get('sequence', 0))
         case.title = request.form.get('title')
         case.summary = request.form.get('summary')
         case.precondition = request.form.get('precondition')
@@ -245,7 +257,7 @@ def manage_case(project_id, case_id=None):
         case.source = request.form.get('source')
         
         # Tags verarbeiten
-        tag_names = [t.strip() for t in request.form.get('tags', '').split(',') if t.strip()]
+        tag_names = [t.strip() for t in request.form.get('tags', '').split(' ') if t.strip()]
         case.tags = []
         for t_name in tag_names:
             tag = Tag.query.filter_by(name=t_name).first()
@@ -282,6 +294,51 @@ def delete_case(case_id):
     db.session.delete(case)
     db.session.commit()
     return redirect(url_for('view_project', project_id=case.project_id))
+
+# NEUE ROUTE zum Sortieren von Testfällen
+@app.route('/case/<int:case_id>/sort/<direction>', methods=['POST'])
+@login_required
+def sort_case(case_id, direction):
+    current_case = TestCase.query.get_or_404(case_id)
+    project = current_case.project
+    
+    # Berechtigung prüfen
+    if not (current_user.is_admin() or (current_user.has_role('manager') and project.owner_id == current_user.id)):
+        abort(403)
+
+    # Alle Testfälle des Projekts, sortiert nach aktueller Reihenfolge
+    sorted_cases = TestCase.query.filter_by(project_id=project.id) \
+                                 .order_by(TestCase.sequence.asc(), TestCase.id.asc()) \
+                                 .all()
+    
+    # Finde den Index des aktuellen Testfalls
+    current_index = [i for i, case in enumerate(sorted_cases) if case.id == case_id][0]
+
+    if direction == 'up' and current_index > 0:
+        # Tausche mit dem vorherigen Element
+        prev_case = sorted_cases[current_index - 1]
+        
+        # Tausche die Sequence-Werte
+        temp_sequence = current_case.sequence
+        current_case.sequence = prev_case.sequence
+        prev_case.sequence = temp_sequence
+        
+        db.session.commit()
+        flash(f'Testfall "{current_case.title}" wurde nach oben verschoben.')
+        
+    elif direction == 'down' and current_index < len(sorted_cases) - 1:
+        # Tausche mit dem nächsten Element
+        next_case = sorted_cases[current_index + 1]
+        
+        # Tausche die Sequence-Werte
+        temp_sequence = current_case.sequence
+        current_case.sequence = next_case.sequence
+        next_case.sequence = temp_sequence
+        
+        db.session.commit()
+        flash(f'Testfall "{current_case.title}" wurde nach unten verschoben.')
+        
+    return redirect(url_for('view_project', project_id=project.id))
 
 # -- Test Runs --
 @app.route('/project/<int:project_id>/run/new', methods=['GET', 'POST'])
