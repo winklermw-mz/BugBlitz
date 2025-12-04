@@ -39,6 +39,7 @@ class Tag(db.Model):
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=True)
     password_hash = db.Column(db.String(150), nullable=False)
     roles = db.relationship('Role', secondary=user_roles, backref='users')
 
@@ -139,7 +140,7 @@ def create_initial_data():
 
         if not User.query.filter_by(username='admin').first():
             hashed_pw = generate_password_hash('admin', method='scrypt')
-            admin_user = User(username='admin', password_hash=hashed_pw)
+            admin_user = User(username='admin', email='admin@company.ai', password_hash=hashed_pw)
             admin_role = Role.query.filter_by(name='admin').first()
             admin_user.roles.append(admin_role)
             db.session.add(admin_user)
@@ -186,12 +187,18 @@ def admin_users():
         if 'create' in request.form:
             uname = request.form.get('username')
             pwd = request.form.get('password')
+            pwd2 = request.form.get('password_repeat')
+            email = request.form.get('email')
             selected_roles = request.form.getlist('roles')
             
+            if pwd != pwd2:
+                flash('Passwörter stimmen nicht überein.')
+                return redirect(url_for('admin_users'))
+
             if User.query.filter_by(username=uname).first():
                 flash('User existiert bereits.')
             else:
-                new_user = User(username=uname, password_hash=generate_password_hash(pwd, method='scrypt'))
+                new_user = User(username=uname, email=email, password_hash=generate_password_hash(pwd, method='scrypt'))
                 for r_name in selected_roles:
                     r = Role.query.filter_by(name=r_name).first()
                     if r: new_user.roles.append(r)

@@ -6,7 +6,9 @@
         <form method="POST" class="card p-3">
             <h5>Neuer Benutzer</h5>
             <input type="text" name="username" placeholder="Username" class="form-control mb-2" required>
+            <input type="text" name="email" placeholder="E-Mail" class="form-control mb-2" required>
             <input type="password" name="password" placeholder="Passwort" class="form-control mb-2" required>
+            <input type="password" name="password_repeat" placeholder="Passwort wiederholen" class="form-control mb-2" required>
             <label class="form-label">Rollen:</label>
             {% for role in all_roles %}
             <div class="form-check">
