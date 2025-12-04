@@ -1,9 +1,9 @@
 from database import db
 
-RESULT_NOT_TESTED = "nicht getestet"
+RESULT_NOT_TESTED = "not tested"
 RESULT_OK = "ok"
-RESULT_FAILED = "fehlerhaft"
-RESULT_BLOCKED = "blockiert"
+RESULT_FAILED = "failed"
+RESULT_BLOCKED = "blocked"
 
 class TestRunAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)

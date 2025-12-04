@@ -89,16 +89,16 @@
                                 {% if key == "percentage" %}
                                     {{ value }}%<br>
                                 {% endif %}    
-                                {% if key == "ok" %}
+                                {% if key == ok %}
                                     <span class="badge bg-success bg-opaque">{{ value }}</span>
                                 {% endif %}    
-                                {% if key == "fehlgeschlagen" %}
+                                {% if key == failed %}
                                     <span class="badge bg-danger bg-opaque">{{ value }}</span>
                                 {% endif %}    
-                                {% if key == "blockiert" %}
+                                {% if key == blocked %}
                                     <span class="badge bg-warning bg-opaque">{{ value }}</span>
                                 {% endif %}    
-                                {% if key == "open" %}
+                                {% if key == not_tested %}
                                     <span class="badge bg-secondary bg-opaque">{{ value }}</span>
                                 {% endif %}
                             {% endfor %}

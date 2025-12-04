@@ -1,5 +1,5 @@
 from database import db
-from model.run_assignment import TestRunAssignment
+from model.run_assignment import TestRunAssignment, RESULT_OK, RESULT_BLOCKED, RESULT_FAILED, RESULT_NOT_TESTED
 
 STATE_ACTIVE = "active"
 STATE_FINISHED = "finished"
@@ -22,15 +22,15 @@ class TestRun(db.Model):
         all_assigns = TestRunAssignment.query.filter_by(test_run_id=self.id).all()
         count = len(all_assigns)
         stats = {
-            'total': count, 
-            'percentage': 0,
-            'ok': 0,
-            'fehlgeschlagen': 0, 
-            'blockiert': 0, 
-            'open': 0,
+            "total": count, 
+            "percentage": 0,
+            RESULT_OK: 0,
+            RESULT_FAILED: 0, 
+            RESULT_BLOCKED: 0, 
+            RESULT_NOT_TESTED: 0,
         }
         for a in all_assigns:
             if a.result in stats: stats[a.result] += 1
-            else: stats['open'] += 1
-        stats["percentage"] = 0 if count == 0 else int(round(100 * (count - stats["open"]) / count, 0))
+            else: stats[RESULT_NOT_TESTED] += 1
+        stats["percentage"] = 0 if count == 0 else int(round(100 * (count - stats[RESULT_NOT_TESTED]) / count, 0))
         return stats

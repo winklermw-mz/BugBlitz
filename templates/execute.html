@@ -4,17 +4,17 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h2>{{ run.title }}</h2>
-        <span class="badge {{ 'bg-success' if run.status == 'active' else 'bg-secondary' }}">
+        <span class="badge {{ 'bg-success' if run.status == state_active else 'bg-secondary' }}">
             State: {{ run.status|upper }}
         </span>
     </div>
     {% if current_user.is_admin() or (current_user.has_role('manager') and run.project.owner_id == current_user.id) %}
     <form method="POST" action="{{ url_for('update_run_status', run_id=run.id) }}" class="d-flex gap-2">
-        {% if run.status == 'active' %}
-            <button name="status" value="finished" class="btn btn-success">Close</button>
-            <button name="status" value="aborted" class="btn btn-danger">Abort</button>
+        {% if run.status == state_active %}
+            <button name="status" value="{{ state_finished }}" class="btn btn-success">Close</button>
+            <button name="status" value="{{ state_aborted }}" class="btn btn-danger">Abort</button>
         {% else %}
-            <button name="status" value="active" class="btn btn-outline-primary">Restart</button>
+            <button name="status" value="{{ state_active }}" class="btn btn-outline-primary">Restart</button>
         {% endif %}
     </form>
     {% endif %}
@@ -24,10 +24,10 @@
     <div class="card-body d-flex justify-content-around text-center">
         <div><strong>Total</strong><h3>{{ stats['total'] }}</h3></div>
         <div><strong>Percentage</strong><h3>{{ stats['percentage'] }}%</h3></div>
-        <div class="text-success"><strong>OK</strong><h3>{{ stats['ok'] }}</h3></div>
-        <div class="text-danger"><strong>Failed</strong><h3>{{ stats['fehlgeschlagen'] }}</h3></div>
-        <div class="text-warning"><strong>Blocked</strong><h3>{{ stats['blockiert'] }}</h3></div>
-        <div class="text-muted"><strong>Not Tested</strong><h3>{{ stats['open'] }}</h3></div>
+        <div class="text-success"><strong>OK</strong><h3>{{ stats[ok] }}</h3></div>
+        <div class="text-danger"><strong>Failed</strong><h3>{{ stats[failed] }}</h3></div>
+        <div class="text-warning"><strong>Blocked</strong><h3>{{ stats[blocked] }}</h3></div>
+        <div class="text-muted"><strong>Not Tested</strong><h3>{{ stats[not_tested] }}</h3></div>
     </div>
 </div>
 
@@ -37,9 +37,9 @@
         <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c{{ assign.id }}">
                 <span class="badge me-2 
-                    {% if assign.result == 'ok' %}bg-success
-                    {% elif assign.result == 'fehlgeschlagen' %}bg-danger
-                    {% elif assign.result == 'blockiert' %}bg-warning
+                    {% if assign.result == ok %}bg-success
+                    {% elif assign.result == failed %}bg-danger
+                    {% elif assign.result == blocked %}bg-warning
                     {% else %}bg-secondary{% endif %}">
                     {{ assign.result }}
                 </span>
@@ -68,11 +68,11 @@
                                         <td>{{ step.action }}</td>
                                         <td>{{ step.expected_result }}</td>
                                         <td>
-                                            {% if run.status == 'active' and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.has_role('manager')) %}
+                                            {% if run.status == state_active and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.has_role('manager')) %}
                                             <select name="step_status_{{ step.step_number }}" class="form-select form-select-sm mb-1">
                                                 <option value="">- State -</option>
-                                                <option value="ok" {% if step_res and step_res.status=='ok' %}selected{% endif %}>OK</option>
-                                                <option value="fail" {% if step_res and step_res.status=='fail' %}selected{% endif %}>Fail</option>
+                                                <option value="{{ ok }}" {% if step_res and step_res.status == ok %}selected{% endif %}>OK</option>
+                                                <option value="{{ failed }}" {% if step_res and step_res.status == failed %}selected{% endif %}>Fail</option>
                                             </select>
                                             <input type="text" name="step_comment_{{ step.step_number }}" class="form-control form-control-sm" placeholder="Comment" value="{{ step_res.comment if step_res else '' }}">
                                             {% else %}
@@ -88,16 +88,16 @@
                         </div>
                     </div>
 
-                    {% if run.status == 'active' and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.has_role('manager')) %}
+                    {% if run.status == state_active and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.has_role('manager')) %}
                     <div class="bg-light p-3 rounded">
                         <label class="form-label fw-bold">Result of test case</label>
                         <div class="row">
                             <div class="col-md-4">
                                 <select name="status" class="form-select">
-                                    <option value="ok" {% if assign.result == 'ok' %}selected{% endif %}>OK</option>
-                                    <option value="fehlgeschlagen" {% if assign.result == 'fehlgeschlagen' %}selected{% endif %}>Failed</option>
-                                    <option value="blockiert" {% if assign.result == 'blockiert' %}selected{% endif %}>Blocked</option>
-                                    <option value="nicht getestet" {% if assign.result == 'nicht getestet' %}selected{% endif %}>Not tested</option>
+                                    <option value="{{ ok }}" {% if assign.result == ok %}selected{% endif %}>OK</option>
+                                    <option value="{{ failed }}" {% if assign.result == failed %}selected{% endif %}>Failed</option>
+                                    <option value="{{ blocked }}" {% if assign.result == blocked %}selected{% endif %}>Blocked</option>
+                                    <option value="{{ not_tested }}" {% if assign.result == not_tested %}selected{% endif %}>Not tested</option>
                                 </select>
                             </div>
                             <div class="col-md-6">

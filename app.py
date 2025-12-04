@@ -18,7 +18,7 @@ from model.tag import Tag
 from model.project import Project
 from model.case import TestCase, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 from model.step import TestStep
-from model.run import TestRun
+from model.run import TestRun, STATE_ABORTED, STATE_ACTIVE, STATE_FINISHED
 from model.run_assignment import TestRunAssignment, RESULT_NOT_TESTED, RESULT_BLOCKED, RESULT_FAILED, RESULT_OK
 from model.step_result import TestStepResult
 from utils.init import create_initial_data
@@ -33,15 +33,15 @@ def load_user(user_id):
 def dashboard():
     if current_user.is_admin():
         projects = Project.query.all()
-        return render_template('dashboard.html', all_projects=projects)
+        return render_template('dashboard.html', all_projects=projects, role_manager=ROLE_MANAGER)
     
     if current_user.has_role(ROLE_MANAGER):
         my_projects = Project.query.filter_by(owner_id=current_user.id).all()
         other_projects = Project.query.filter(Project.owner_id != current_user.id).all()
-        return render_template('dashboard.html', my_projects=my_projects, other_projects=other_projects)
+        return render_template('dashboard.html', my_projects=my_projects, other_projects=other_projects, role_manager=ROLE_MANAGER)
     
     projects = Project.query.all()
-    return render_template('dashboard.html', all_projects=projects)
+    return render_template('dashboard.html', all_projects=projects, role_manager=ROLE_MANAGER)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -164,7 +164,7 @@ def view_project(project_id):
         statistics[run.id] = run.calculate_statistics()
     print(statistics)
 
-    return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics, prio1=PRIORITY_HIGH, prio2=PRIORITY_NORMAL, prio3=PRIORITY_LOW)
+    return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics, prio1=PRIORITY_HIGH, prio2=PRIORITY_NORMAL, prio3=PRIORITY_LOW, not_tested=RESULT_NOT_TESTED, blocked=RESULT_BLOCKED, failed=RESULT_FAILED, ok=RESULT_OK)
 
 @app.route('/project/<int:project_id>/case/new', methods=['GET', 'POST'])
 @app.route('/project/<int:project_id>/case/<int:case_id>/edit', methods=['GET', 'POST'])
@@ -341,7 +341,7 @@ def execute_run(run_id):
             flash('Ergebnis gespeichert.')
             return redirect(url_for('execute_run', run_id=run.id))
 
-    return render_template('execute.html', run=run, assignments=assignments, stats=stats)
+    return render_template('execute.html', run=run, assignments=assignments, stats=stats, state_active=STATE_ACTIVE, state_aborted=STATE_ABORTED, state_finished=STATE_FINISHED, not_tested=RESULT_NOT_TESTED, blocked=RESULT_BLOCKED, failed=RESULT_FAILED, ok=RESULT_OK)
 
 if __name__ == '__main__':
     create_initial_data(app)
