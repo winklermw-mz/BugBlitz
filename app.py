@@ -28,6 +28,7 @@ from utils.init import create_initial_data
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# ROUTE: Dashboard
 @app.route('/')
 @login_required
 def dashboard():
@@ -43,6 +44,7 @@ def dashboard():
     projects = Project.query.all()
     return render_template('dashboard.html', all_projects=projects)
 
+# ROUTE: Login form
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -53,12 +55,14 @@ def login():
         flash('Login failed.')
     return render_template('login.html')
 
+# ROUTE: Logout, redirected to login form
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
+# ROUTE: User administration
 @app.route('/admin/users', methods=['GET', 'POST'])
 @login_required
 def admin_users():
@@ -99,6 +103,7 @@ def admin_users():
     all_roles = Role.query.all()
     return render_template('admin.html', users=users, all_roles=all_roles, admin_id=USER_ADMIN)
 
+# ROUTE: Modify user
 @app.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_user(user_id):
@@ -137,6 +142,7 @@ def edit_user(user_id):
 
     return render_template('user_form.html', user=user, all_roles=all_roles)
 
+# ROUTE: New project
 @app.route('/project/new', methods=['GET', 'POST'])
 @login_required
 def create_project():
@@ -148,6 +154,7 @@ def create_project():
         return redirect(url_for('dashboard'))
     return render_template('project_form.html', project=None)
 
+# ROUTE: Delete project
 @app.route('/project/<int:project_id>/delete', methods=['POST'])
 @login_required
 def delete_project(project_id):
@@ -158,6 +165,7 @@ def delete_project(project_id):
     flash('Project deleted.')
     return redirect(url_for('dashboard'))
 
+# ROUTE: Modify project
 @app.route('/project/<int:project_id>')
 @login_required
 def view_project(project_id):
@@ -185,6 +193,7 @@ def view_project(project_id):
         aborted=STATE_ABORTED
     )
 
+# ROUTE: New test case, modify test case
 @app.route('/project/<int:project_id>/case/new', methods=['GET', 'POST'])
 @app.route('/project/<int:project_id>/case/<int:case_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -244,6 +253,7 @@ def manage_case(project_id, case_id=None):
         prio3=PRIORITY_LOW
     )
 
+# ROUTE: Delete test case
 @app.route('/case/<int:case_id>/delete', methods=['POST'])
 @login_required
 def delete_case(case_id):
@@ -253,6 +263,7 @@ def delete_case(case_id):
     db.session.commit()
     return redirect(url_for('view_project', project_id=case.project_id))
 
+# ROUTE: Sort test cases
 @app.route('/case/<int:case_id>/sort/<direction>', methods=['POST'])
 @login_required
 def sort_case(case_id, direction):
@@ -286,6 +297,7 @@ def sort_case(case_id, direction):
         
     return redirect(url_for('view_project', project_id=project.id))
 
+# ROUTE: New test run
 @app.route('/project/<int:project_id>/run/new', methods=['GET', 'POST'])
 @login_required
 def create_run(project_id):
@@ -316,6 +328,7 @@ def create_run(project_id):
     potential_testers = User.query.filter(User.roles.any(Role.name.in_([ROLE_TESTER, ROLE_MANAGER, ROLE_ADMIN]))).all()
     return render_template('run_form.html', project=project, testers=potential_testers)
 
+# ROUTE: Update state of test run, redirect to referrer
 @app.route('/run/<int:run_id>/status', methods=['POST'])
 @login_required
 def update_run_status(run_id):
@@ -323,11 +336,12 @@ def update_run_status(run_id):
     if not (current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id)): abort(403)
     
     new_status = request.form.get('status')
-    if new_status in ['active', 'finished', 'aborted']:
+    if new_status in [STATE_ACTIVE, STATE_FINISHED, STATE_ABORTED]:
         run.status = new_status
         db.session.commit()
     return redirect(request.referrer)
 
+# ROUTE: Start test run
 @app.route('/run/<int:run_id>/execute', methods=['GET', 'POST'])
 @login_required
 def execute_run(run_id):
@@ -346,7 +360,7 @@ def execute_run(run_id):
         
         allowed = current_user.is_admin() or \
                   (current_user.is_test_manager() and run.project.owner_id == current_user.id) or \
-                  (current_user.id == assignment.tester_id and run.status == 'active')
+                  (current_user.id == assignment.tester_id and run.status == STATE_ACTIVE)
                   
         if assignment and allowed:
             assignment.result = request.form.get('status')
