@@ -33,9 +33,10 @@
     </div>
     {% endfor %}
 
-    <button type="submit" class="btn btn-primary mt-3">Speichern</button>
-    <a href="{{ url_for('admin_users') }}" class="btn btn-secondary mt-3">Abbrechen</a>
-
+    <div class="d-flex justify-content-start gap-2 mt-3">
+        <button type="submit" class="btn btn-primary btn-sm">Speichern</button>
+        <a href="{{ url_for('admin_users') }}" class="btn btn-secondary btn-sm">Abbrechen</a>
+    </div>
 </form>
 
 {% endblock %}
