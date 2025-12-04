@@ -23,10 +23,11 @@
 <div class="card mb-4">
     <div class="card-body d-flex justify-content-around text-center">
         <div><strong>Gesamt</strong><h3>{{ stats['total'] }}</h3></div>
+        <div><strong>Erledigt</strong><h3>{{ stats['percentage'] }}%</h3></div>
         <div class="text-success"><strong>OK</strong><h3>{{ stats['ok'] }}</h3></div>
         <div class="text-danger"><strong>Fehlgeschlagen</strong><h3>{{ stats['fehlgeschlagen'] }}</h3></div>
         <div class="text-warning"><strong>Blockiert</strong><h3>{{ stats['blockiert'] }}</h3></div>
-        <div class="text-muted"><strong>Offen</strong><h3>{{ stats['nicht getestet'] }}</h3></div>
+        <div class="text-muted"><strong>Offen</strong><h3>{{ stats['open'] }}</h3></div>
     </div>
 </div>
 

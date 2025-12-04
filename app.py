@@ -109,6 +109,23 @@ class TestStepResult(db.Model):
     comment = db.Column(db.Text)
 
 
+def calculate_statistics(run_id: int) -> dict:
+    all_assigns = TestRunAssignment.query.filter_by(test_run_id=run_id).all()
+    count = len(all_assigns)
+    stats = {
+        'total': count, 
+        'percentage': 0,
+        'ok': 0,
+        'fehlgeschlagen': 0, 
+        'blockiert': 0, 
+        'open': 0,
+    }
+    for a in all_assigns:
+        if a.result in stats: stats[a.result] += 1
+        else: stats['open'] += 1
+    stats["percentage"] = 0 if count == 0 else int(round(100 * (count - stats["open"]) / count, 0))
+    return stats
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -218,20 +235,7 @@ def view_project(project_id):
 
     statistics = {}
     for run in project.test_runs:
-        all_assigns = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
-        stats = {
-            'Anzahl Testfälle': len(all_assigns), 
-            'Erledigung': 0, 
-            'ok': 0, 
-            'fehlgeschlagen': 0, 
-            'blockiert': 0, 
-            'nicht getestet': 0,
-        }
-        for a in all_assigns:
-            if a.result in stats: stats[a.result] += 1
-            else: stats['nicht getestet'] += 1
-        stats["Erledigung"] = 0 if len(all_assigns) == 0 else int(round(100 * (len(all_assigns) - stats['nicht getestet']) / len(all_assigns), 0))
-        statistics[run.id] = stats
+        statistics[run.id] = calculate_statistics(run.id)
     print(statistics)
 
     return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics)
@@ -375,11 +379,7 @@ def execute_run(run_id):
     else:
         assignments = TestRunAssignment.query.filter_by(test_run_id=run.id, tester_id=current_user.id).all()
 
-    all_assigns = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
-    stats = {'total': len(all_assigns), 'ok': 0, 'fehlgeschlagen': 0, 'blockiert': 0, 'nicht getestet': 0}
-    for a in all_assigns:
-        if a.result in stats: stats[a.result] += 1
-        else: stats['nicht getestet'] += 1
+    stats = calculate_statistics(run.id)
 
     if request.method == 'POST':
         assign_id = request.form.get('assignment_id')
