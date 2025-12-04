@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="row">
     <div class="col-md-12 mb-3">
         <h1>{{ project.title }}</h1>
@@ -15,7 +16,7 @@
                 <span>Test Cases</span>
                 <input type="text" id="caseSearch" class="form-control form-control-sm w-50" placeholder="Search test cases..." onkeyup="filterCases()">
                 {% if current_user.id == project.owner_id %}
-                <a href="{{ url_for('manage_case', project_id=project.id) }}" class="btn btn-sm btn-success ms-2">+ New Test Case</a>
+                <a href="{{ url_for('manage_case', project_id=project.id) }}" class="btn btn-sm btn-primary ms-2">+ New Test Case</a>
                 {% endif %}
             </div>
 
@@ -70,7 +71,7 @@
             <div class="card-header d-flex justify-content-between">
                 <span>Test Plans</span>
                 {% if current_user.id == project.owner_id %}
-                <a href="{{ url_for('create_run', project_id=project.id) }}" class="btn btn-sm btn-success">+ New Test Plan</a>
+                <a href="{{ url_for('create_run', project_id=project.id) }}" class="btn btn-sm btn-primary">+ New Test Plan</a>
                 {% endif %}
             </div>
             <ul class="list-group list-group-flush">
