@@ -1,6 +1,8 @@
 from database import db
 from flask_login import UserMixin
 
+USER_ADMIN = "admin"
+
 
 user_roles = db.Table(
     'user_roles',
@@ -19,4 +21,4 @@ class User(UserMixin, db.Model):
         return any(r.name == role_name for r in self.roles)
     
     def is_admin(self):
-        return self.has_role('admin')
+        return self.has_role(USER_ADMIN)

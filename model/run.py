@@ -1,6 +1,9 @@
 from database import db
 from model.run_assignment import TestRunAssignment
 
+STATE_ACTIVE = "active"
+STATE_FINISHED = "finished"
+STATE_ABORTED = "aborted"
 
 class TestRun(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -8,12 +11,12 @@ class TestRun(db.Model):
     title = db.Column(db.String(150), nullable=False)
     start_date = db.Column(db.Date)
     end_date = db.Column(db.Date)
-    status = db.Column(db.String(20), default='active') # active, finished, aborted
+    status = db.Column(db.String(20), default=STATE_ACTIVE)
     assignments = db.relationship('TestRunAssignment', backref='test_run', cascade="all, delete-orphan")
     project = db.relationship('Project', backref='test_runs')
 
     def is_active(self):
-        return self.status == "active"
+        return self.status == STATE_ACTIVE
     
     def calculate_statistics(self) -> dict:
         all_assigns = TestRunAssignment.query.filter_by(test_run_id=self.id).all()
