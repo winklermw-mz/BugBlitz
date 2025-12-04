@@ -78,7 +78,11 @@
                                             <input type="text" name="step_comment_{{ step.step_number }}" class="form-control form-control-sm" placeholder="Comment" value="{{ step_res.comment if step_res else '' }}">
                                             {% else %}
                                                 {% if step_res %}
-                                                    <strong>{{ step_res.status }}</strong>: {{ step_res.comment }}
+                                                    <span class="badge me-2 
+                                                        {% if step_res.status == ok %}bg-success
+                                                        {% elif step_res.status == failed %}bg-danger{% endif %}">
+                                                        {{ step_res.status }}
+                                                    </span> {{ step_res.comment }}
                                                 {% endif %}
                                             {% endif %}
                                         </td>
