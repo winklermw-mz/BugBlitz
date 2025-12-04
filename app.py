@@ -50,7 +50,7 @@ def login():
         if user and check_password_hash(user.password_hash, request.form.get('password')):
             login_user(user)
             return redirect(url_for('dashboard'))
-        flash('Login fehlgeschlagen.')
+        flash('Login failed.')
     return render_template('login.html')
 
 @app.route('/logout')
@@ -73,11 +73,11 @@ def admin_users():
             selected_roles = request.form.getlist('roles')
             
             if pwd != pwd2:
-                flash('Passwörter stimmen nicht überein.')
+                flash('Passwords do not match.')
                 return redirect(url_for('admin_users'))
 
             if User.query.filter_by(username=uname).first():
-                flash('User existiert bereits.')
+                flash('User already exists.')
             else:
                 new_user = User(username=uname, email=email, password_hash=generate_password_hash(pwd, method='scrypt'))
                 for r_name in selected_roles:
@@ -85,7 +85,7 @@ def admin_users():
                     if r: new_user.roles.append(r)
                 db.session.add(new_user)
                 db.session.commit()
-                flash('Benutzer angelegt.')
+                flash('User successfully created.')
         elif 'delete' in request.form:
             User.query.filter_by(id=request.form.get('user_id')).delete()
             db.session.commit()
@@ -113,7 +113,7 @@ def edit_user(user_id):
 
         if pwd or pwd2:
             if pwd != pwd2:
-                flash("Passwörter stimmen nicht überein.")
+                flash("Passwords do not match.")
                 return redirect(url_for('edit_user', user_id=user.id))
             user.password_hash = generate_password_hash(pwd, method='scrypt')
 
@@ -127,7 +127,7 @@ def edit_user(user_id):
                 user.roles.append(r)
 
         db.session.commit()
-        flash("Benutzer aktualisiert.")
+        flash("User updated.")
         return redirect(url_for('admin_users'))
 
     return render_template('user_form.html', user=user, all_roles=all_roles)
@@ -150,7 +150,7 @@ def delete_project(project_id):
     if not (current_user.is_admin() or (current_user.has_role(ROLE_MANAGER) and proj.owner_id == current_user.id)): abort(403)
     db.session.delete(proj)
     db.session.commit()
-    flash('Projekt gelöscht.')
+    flash('Project deleted.')
     return redirect(url_for('dashboard'))
 
 @app.route('/project/<int:project_id>')
@@ -246,7 +246,7 @@ def sort_case(case_id, direction):
         prev_case.sequence = temp_sequence
         
         db.session.commit()
-        flash(f'Testfall "{current_case.title}" wurde nach oben verschoben.')
+        flash(f'Test case "{current_case.title}" moved up.')
         
     elif direction == 'down' and current_index < len(sorted_cases) - 1:
         next_case = sorted_cases[current_index + 1]
@@ -255,7 +255,7 @@ def sort_case(case_id, direction):
         next_case.sequence = temp_sequence
         
         db.session.commit()
-        flash(f'Testfall "{current_case.title}" wurde nach unten verschoben.')
+        flash(f'Test case "{current_case.title}" moved down.')
         
     return redirect(url_for('view_project', project_id=project.id))
 
@@ -338,7 +338,7 @@ def execute_run(run_id):
                 step_res.comment = s_comment
                 
             db.session.commit()
-            flash('Ergebnis gespeichert.')
+            flash('Result saved.')
             return redirect(url_for('execute_run', run_id=run.id))
 
     return render_template('execute.html', run=run, assignments=assignments, stats=stats, state_active=STATE_ACTIVE, state_aborted=STATE_ABORTED, state_finished=STATE_FINISHED, not_tested=RESULT_NOT_TESTED, blocked=RESULT_BLOCKED, failed=RESULT_FAILED, ok=RESULT_OK)
