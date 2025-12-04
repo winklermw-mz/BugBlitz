@@ -167,7 +167,6 @@ def view_project(project_id):
     statistics = {}
     for run in project.test_runs:
         statistics[run.id] = run.calculate_statistics()
-    print(statistics)
 
     return render_template(
         'project_view.html', 
