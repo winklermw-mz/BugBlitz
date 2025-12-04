@@ -1,4 +1,4 @@
-from database import setup_database, setup_login_manager
+from utils.database import setup_database, setup_login_manager
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_user, login_required, logout_user, current_user

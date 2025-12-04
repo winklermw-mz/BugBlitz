@@ -1,4 +1,4 @@
-from database import db
+from utils.database import db
 from model.run_assignment import TestRunAssignment, RESULT_OK, RESULT_BLOCKED, RESULT_FAILED, RESULT_NOT_TESTED
 
 STATE_ACTIVE = "active"

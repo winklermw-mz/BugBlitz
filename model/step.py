@@ -1,4 +1,4 @@
-from database import db
+from utils.database import db
 
 class TestStep(db.Model):
     id = db.Column(db.Integer, primary_key=True)

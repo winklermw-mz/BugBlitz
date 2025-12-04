@@ -1,4 +1,4 @@
-from database import db
+from utils.database import db
 from model.role import Role, ROLE_MANAGER, ROLE_TESTER, ROLE_ADMIN
 from model.user import User, USER_ADMIN
 from werkzeug.security import generate_password_hash

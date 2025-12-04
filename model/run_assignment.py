@@ -1,4 +1,4 @@
-from database import db
+from utils.database import db
 
 RESULT_NOT_TESTED = "not tested"
 RESULT_OK = "ok"

@@ -1,4 +1,4 @@
-from database import db
+from utils.database import db
 
 PRIORITY_HIGH = "hoch"
 PRIORITY_NORMAL = "normal"
