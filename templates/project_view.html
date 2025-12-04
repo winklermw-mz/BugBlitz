@@ -3,9 +3,24 @@
 
 <div class="row">
     <div class="col-md-12 mb-3">
-        <h1>{{ project.title }}</h1>
-        <p class="text-muted">{{ project.description }}</p>
-        <p><strong>Responsible:</strong> {{ project.owner.username }}</p>
+        {% if current_user.is_admin() or current_user.id == project.owner_id %}
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h2>{{ project.title }}</h2>
+                <p class="text-muted">{{ project.description }}</p>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back</a>
+
+                <form action="{{ url_for('delete_project', project_id=project.id) }}" 
+                    method="POST" 
+                    onsubmit="return confirm('Delete test project now');">
+                    <button type="submit" class="btn btn-danger">Delete Project</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -25,8 +40,7 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center case-item">
                     <div>
                         <span class="badge text-dark border ms-1 me-2">{{ case.sequence }}</span>
-                        
-                        <strong>{{ case.title }}</strong>
+                        <strong>{{ case.title }}</strong><br>
 
                         {% if case.priority == prio1 %}
                         <span class="badge bg-danger">{{ case.priority }}</span>
@@ -84,9 +98,13 @@
                         <h5 class="card-title pe-5">
                             {{ run.title }}
                             {% if run.status == active %}
-                                <span class="badge bg-success">{{ run.status }}</span>
-                            {% else %}
-                                <span class="badge bg-secondary">{{ run.status }}</span>
+                                &nbsp;<span class="badge bg-success">{{ run.status }}</span>
+                            {% endif %}
+                            {% if run.status == finished %}
+                                &nbsp;<span class="badge bg-secondary">{{ run.status }}</span>
+                            {% endif %}
+                            {% if run.status == aborted %}
+                                &nbsp;<span class="badge bg-danger">{{ run.status }}</span>                                
                             {% endif %}
                         </h5>
 
@@ -122,7 +140,6 @@
 </div>
 
 {% if current_user.is_admin() or current_user.id == project.owner_id %}
-<hr class="mt-5">
 <div class="d-flex justify-content-between gap-2">
     <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back</a>
     

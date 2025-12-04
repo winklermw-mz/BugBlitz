@@ -16,12 +16,10 @@
             {% if current_user.is_authenticated %}
             <div class="d-flex align-items-center">
                 <span class="navbar-text text-white me-3">
-                    User: {{ current_user.username }} 
-                    <span class="badge bg-light text-primary ms-1">
-                        {% for role in current_user.roles %}
-                            {{ role.name }}{{ "," if not loop.last }}
-                        {% endfor %}
-                    </span>
+                    {{ current_user.username }} 
+                    {% for role in current_user.roles %}
+                    <span class="badge bg-light text-primary ms-1">{{ role.name }}</span>
+                    {% endfor %}
                 </span>
                 
                 {% if current_user.is_admin() %}

@@ -4,9 +4,9 @@
 <div class="row">
     <div class="col-md-4">
         <form method="POST" class="card p-3">
-            <h5>New User</h5>
+            <h5>Create New User</h5>
             <input type="text" name="username" placeholder="Username" class="form-control mb-2" required>
-            <input type="text" name="email" placeholder="E-Mail" class="form-control mb-2" required>
+            <input type="text" name="email" placeholder="Email address" class="form-control mb-2" required>
             <input type="password" name="password" placeholder="Password" class="form-control mb-2" required>
             <input type="password" name="password_repeat" placeholder="Password confirmation" class="form-control mb-2" required>
             <label class="form-label">Roles:</label>
@@ -21,7 +21,7 @@
     </div>
     <div class="col-md-8">
         <table class="table bg-white">
-            <thead><tr><th>User</th><th>E-Mail</th><th>Roles</th><th>Aktion</th></tr></thead>
+            <thead><tr><th>Username</th><th>Email</th><th>Roles</th><th></th></tr></thead>
             <tbody>
                 {% for u in users %}
                 <tr>
