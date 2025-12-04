@@ -83,10 +83,10 @@
                         <small>{{ run.start_date }} bis {{ run.end_date }}<br>
                         {% if run.id in statistics %}
                             {% for key, value in statistics[run.id].items() %}
-                                {% if key == "Anzahl Testfälle" %}
+                                {% if key == "total" %}
                                     {{ key }}: {{ value }}, Ergebnisse: 
                                 {% endif %}    
-                                {% if key == "Erledigung" %}
+                                {% if key == "percentage" %}
                                     {{ value }}%<br>
                                 {% endif %}    
                                 {% if key == "ok" %}
@@ -98,7 +98,7 @@
                                 {% if key == "blockiert" %}
                                     <span class="badge bg-warning bg-opaque">{{ value }}</span>
                                 {% endif %}    
-                                {% if key == "nicht getestet" %}
+                                {% if key == "open" %}
                                     <span class="badge bg-secondary bg-opaque">{{ value }}</span>
                                 {% endif %}
                             {% endfor %}
