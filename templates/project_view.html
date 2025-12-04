@@ -66,54 +66,57 @@
         </div>
     </div>
     <br><br>
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between">
-                <span>Test Plans</span>
-                {% if current_user.id == project.owner_id %}
-                <a href="{{ url_for('create_run', project_id=project.id) }}" class="btn btn-sm btn-primary">+ New Test Plan</a>
-                {% endif %}
-            </div>
-            <ul class="list-group list-group-flush">
-                {% for run in project.test_runs %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>{{ run.title }}</strong>
+    <div class="col-md-12 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4>Test Plans</h4>
+            {% if current_user.id == project.owner_id %}
+            <a href="{{ url_for('create_run', project_id=project.id) }}" class="btn btn-sm btn-primary">+ New Test Plan</a>
+            {% endif %}
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            {% for run in project.test_runs %}
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body position-relative">
+                        <a href="{{ url_for('execute_run', run_id=run.id) }}" class="btn btn-sm btn-outline-primary position-absolute" style="top: 10px; right: 10px;">Open</a>
+
+                        <h5 class="card-title pe-5">
+                            {{ run.title }}
                             {% if run.status == active %}
                                 <span class="badge bg-success">{{ run.status }}</span>
                             {% else %}
                                 <span class="badge bg-secondary">{{ run.status }}</span>
                             {% endif %}
-                        <br>
-                        <small>{{ run.start_date }} bis {{ run.end_date }}<br>
+                        </h5>
+
+                        <p class="text-muted small mb-2">
+                            {{ run.start_date }} bis {{ run.end_date }}
+                        </p>
+
                         {% if run.id in statistics %}
-                            {% for key, value in statistics[run.id].items() %}
-                                {% if key == "total" %}
-                                    {{ key }}: {{ value }}, Ergebnisse: 
-                                {% endif %}    
-                                {% if key == "percentage" %}
-                                    {{ value }}%<br>
-                                {% endif %}    
-                                {% if key == ok %}
-                                    <span class="badge bg-success bg-opaque">{{ value }}</span>
-                                {% endif %}    
-                                {% if key == failed %}
-                                    <span class="badge bg-danger bg-opaque">{{ value }}</span>
-                                {% endif %}    
-                                {% if key == blocked %}
-                                    <span class="badge bg-warning bg-opaque">{{ value }}</span>
-                                {% endif %}    
-                                {% if key == not_tested %}
-                                    <span class="badge bg-secondary bg-opaque">{{ value }}</span>
-                                {% endif %}
-                            {% endfor %}
+                            <div>
+                                <small class="text-muted">Results:</small><br>
+                                {% for key, value in statistics[run.id].items() %}
+                                    {% if key == ok %}
+                                        <span class="badge bg-success">{{ value }}</span>
+                                    {% endif %}
+                                    {% if key == failed %}
+                                        <span class="badge bg-danger">{{ value }}</span>
+                                    {% endif %}
+                                    {% if key == blocked %}
+                                        <span class="badge bg-warning text-dark">{{ value }}</span>
+                                    {% endif %}
+                                    {% if key == not_tested %}
+                                        <span class="badge bg-secondary">{{ value }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         {% endif %}
-                        </small>
                     </div>
-                    <a href="{{ url_for('execute_run', run_id=run.id) }}" class="btn btn-sm btn-outline-primary">Open</a>
-                </li>
-                {% endfor %}
-            </ul>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
