@@ -33,20 +33,15 @@ def load_user(user_id):
 def dashboard():
     if current_user.is_admin():
         projects = Project.query.all()
-        return render_template('dashboard.html', all_projects=projects, role_manager=ROLE_MANAGER)
+        return render_template('dashboard.html', all_projects=projects)
     
-    if current_user.has_role(ROLE_MANAGER):
+    if current_user.is_test_manager():
         my_projects = Project.query.filter_by(owner_id=current_user.id).all()
         other_projects = Project.query.filter(Project.owner_id != current_user.id).all()
-        return render_template(
-            'dashboard.html', 
-            my_projects=my_projects, 
-            other_projects=other_projects, 
-            role_manager=ROLE_MANAGER
-        )
+        return render_template('dashboard.html', my_projects=my_projects, other_projects=other_projects)
     
     projects = Project.query.all()
-    return render_template('dashboard.html', all_projects=projects, role_manager=ROLE_MANAGER)
+    return render_template('dashboard.html', all_projects=projects)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -145,7 +140,7 @@ def edit_user(user_id):
 @app.route('/project/new', methods=['GET', 'POST'])
 @login_required
 def create_project():
-    if not (current_user.has_role(ROLE_MANAGER) or current_user.is_admin()): abort(403)
+    if not (current_user.is_test_manager() or current_user.is_admin()): abort(403)
     if request.method == 'POST':
         proj = Project(title=request.form.get('title'), description=request.form.get('description'), owner_id=current_user.id)
         db.session.add(proj)
@@ -157,7 +152,7 @@ def create_project():
 @login_required
 def delete_project(project_id):
     proj = Project.query.get_or_404(project_id)
-    if not (current_user.is_admin() or (current_user.has_role(ROLE_MANAGER) and proj.owner_id == current_user.id)): abort(403)
+    if not (current_user.is_admin() or (current_user.is_test_manager() and proj.owner_id == current_user.id)): abort(403)
     db.session.delete(proj)
     db.session.commit()
     flash('Project deleted.')
@@ -196,7 +191,7 @@ def view_project(project_id):
 @login_required
 def manage_case(project_id, case_id=None):
     project = Project.query.get_or_404(project_id)
-    if not (current_user.is_admin() or (current_user.has_role(ROLE_MANAGER) and project.owner_id == current_user.id)): abort(403)
+    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): abort(403)
 
     if case_id:
         case = TestCase.query.get(case_id)
@@ -254,7 +249,7 @@ def manage_case(project_id, case_id=None):
 @login_required
 def delete_case(case_id):
     case = TestCase.query.get_or_404(case_id)
-    if not (current_user.is_admin() or (current_user.has_role(ROLE_MANAGER) and case.project.owner_id == current_user.id)): abort(403)
+    if not (current_user.is_admin() or (current_user.is_test_manager() and case.project.owner_id == current_user.id)): abort(403)
     db.session.delete(case)
     db.session.commit()
     return redirect(url_for('view_project', project_id=case.project_id))
@@ -265,7 +260,7 @@ def sort_case(case_id, direction):
     current_case = TestCase.query.get_or_404(case_id)
     project = current_case.project
     
-    if not (current_user.is_admin() or (current_user.has_role(ROLE_MANAGER) and project.owner_id == current_user.id)):
+    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)):
         abort(403)
 
     sorted_cases = TestCase.query.filter_by(project_id=project.id).order_by(TestCase.sequence.asc(), TestCase.id.asc()).all()
@@ -296,7 +291,7 @@ def sort_case(case_id, direction):
 @login_required
 def create_run(project_id):
     project = Project.query.get_or_404(project_id)
-    if not (current_user.is_admin() or (current_user.has_role(ROLE_MANAGER) and project.owner_id == current_user.id)): abort(403)
+    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): abort(403)
          
     if request.method == 'POST':
         run = TestRun(
@@ -326,7 +321,7 @@ def create_run(project_id):
 @login_required
 def update_run_status(run_id):
     run = TestRun.query.get_or_404(run_id)
-    if not (current_user.is_admin() or (current_user.has_role(ROLE_MANAGER) and run.project.owner_id == current_user.id)): abort(403)
+    if not (current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id)): abort(403)
     
     new_status = request.form.get('status')
     if new_status in ['active', 'finished', 'aborted']:
@@ -339,7 +334,7 @@ def update_run_status(run_id):
 def execute_run(run_id):
     run = TestRun.query.get_or_404(run_id)
     
-    if current_user.is_admin() or current_user.has_role(ROLE_MANAGER):
+    if current_user.is_admin() or current_user.is_test_manager():
         assignments = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
     else:
         assignments = TestRunAssignment.query.filter_by(test_run_id=run.id, tester_id=current_user.id).all()
@@ -351,7 +346,7 @@ def execute_run(run_id):
         assignment = TestRunAssignment.query.get(assign_id)
         
         allowed = current_user.is_admin() or \
-                  (current_user.has_role(ROLE_MANAGER) and run.project.owner_id == current_user.id) or \
+                  (current_user.is_test_manager() and run.project.owner_id == current_user.id) or \
                   (current_user.id == assignment.tester_id and run.status == 'active')
                   
         if assignment and allowed:

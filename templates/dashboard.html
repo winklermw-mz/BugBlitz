@@ -3,12 +3,12 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Dashboard</h2>
     
-    {% if current_user.has_role(role_manager) or current_user.is_admin() %}
+    {% if current_user.is_test_manager() or current_user.is_admin() %}
     <a href="{{ url_for('create_project') }}" class="btn btn-primary">+ New Project</a>
     {% endif %}
 </div>
 
-{% if current_user.has_role(role_manager) and not current_user.is_admin() %}
+{% if current_user.is_test_manager() and not current_user.is_admin() %}
     
     <h4>Meine Projekte</h4>
     <div class="list-group mb-4">

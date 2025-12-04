@@ -8,7 +8,7 @@
             State: {{ run.status|upper }}
         </span>
     </div>
-    {% if current_user.is_admin() or (current_user.has_role('manager') and run.project.owner_id == current_user.id) %}
+    {% if current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id) %}
     <form method="POST" action="{{ url_for('update_run_status', run_id=run.id) }}" class="d-flex gap-2">
         {% if run.status == state_active %}
             <button name="status" value="{{ state_finished }}" class="btn btn-primary">Close Test Plan</button>
@@ -69,7 +69,7 @@
                                         <td>{{ step.action }}</td>
                                         <td>{{ step.expected_result }}</td>
                                         <td>
-                                            {% if run.status == state_active and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.has_role('manager')) %}
+                                            {% if run.status == state_active and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.is_test_manager()) %}
                                             <select name="step_status_{{ step.step_number }}" class="form-select form-select-sm mb-1">
                                                 <option value="">- State -</option>
                                                 <option value="{{ ok }}" {% if step_res and step_res.status == ok %}selected{% endif %}>OK</option>
@@ -89,7 +89,7 @@
                         </div>
                     </div>
 
-                    {% if run.status == state_active and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.has_role('manager')) %}
+                    {% if run.status == state_active and (current_user.id == assign.tester_id or current_user.is_admin() or current_user.is_test_manager()) %}
                     <div class="bg-light p-3 rounded">
                         <label class="form-label fw-bold">Result of test case</label>
                         <div class="row">
