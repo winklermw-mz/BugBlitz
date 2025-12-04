@@ -37,7 +37,11 @@
         {% with messages = get_flashed_messages() %}
         {% if messages %}
             {% for message in messages %}
-            <div class="alert alert-info">{{ message }}</div>
+                {% if message.startswith("Error: ") %}
+                    <div class="alert alert-danger mt-2">{{ message }}</div>
+                {% else %}
+                    <div class="alert alert-success mt-2">{{ message }}</div>
+                {% endif %}        
             {% endfor %}
         {% endif %}
         {% endwith %}

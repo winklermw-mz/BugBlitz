@@ -52,7 +52,7 @@ def login():
             login_user(user)
             return redirect(url_for('dashboard'))
         
-        flash('Login failed.')
+        flash('Error: Login failed.')
     return render_template('login.html')
 
 # ROUTE: Logout, redirected to login form
@@ -78,11 +78,11 @@ def admin_users():
             selected_roles = request.form.getlist('roles')
             
             if pwd != pwd2:
-                flash('Passwords do not match.')
+                flash('Error: Passwords do not match.')
                 return redirect(url_for('admin_users'))
 
             if User.query.filter_by(username=uname).first():
-                flash('User already exists.')
+                flash('Error: User already exists.')
             else:
                 new_user = User(
                     username=uname, 
@@ -124,7 +124,7 @@ def edit_user(user_id):
 
         if pwd or pwd2:
             if pwd != pwd2:
-                flash("Passwords do not match.")
+                flash("Error: Passwords do not match.")
                 return redirect(url_for('edit_user', user_id=user.id))
             user.password_hash = generate_password_hash(pwd, method='scrypt')
 
@@ -348,8 +348,16 @@ def update_run_status(run_id):
     
     new_status = request.form.get('status')
     if new_status in [STATE_ACTIVE, STATE_FINISHED, STATE_ABORTED]:
+        if new_status == STATE_FINISHED:
+            all_assigns = TestRunAssignment.query.filter_by(test_run_id=run_id).all()
+            for assignment in all_assigns:
+                if assignment.result == RESULT_NOT_TESTED:
+                    flash("Error: Cannot close test plan because at least one test case is open.")
+                    return redirect(url_for('execute_run', run_id=run_id))
+
         run.status = new_status
         db.session.commit()
+    
     return redirect(request.referrer)
 
 # ROUTE: Start test run
