@@ -110,7 +110,23 @@
                         </div>
                     </div>
                     {% else %}
+                    
+                    {% if assign.result == ok %}
+                    <div class="alert alert-success">
+                    {% endif %}
+
+                    {% if assign.result == blocked %}
+                    <div class="alert alert-warning">
+                    {% endif %}
+
+                    {% if assign.result == failed %}
+                    <div class="alert alert-danger">
+                    {% endif %}
+
+                    {% if assign.result == not_tested %}
                     <div class="alert alert-info">
+                    {% endif %}
+
                         <strong>Result:</strong> {{ assign.result }} <br>
                         <strong>Comment:</strong> {{ assign.comment }}
                     </div>
