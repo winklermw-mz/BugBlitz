@@ -1,6 +1,6 @@
 from utils.database import db
 
-PRIORITY_HIGH = "hoch"
+PRIORITY_HIGH = "high"
 PRIORITY_NORMAL = "normal"
 PRIORITY_LOW = "low"
 
