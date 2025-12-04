@@ -213,6 +213,44 @@ def admin_users():
     all_roles = Role.query.all()
     return render_template('admin.html', users=users, all_roles=all_roles)
 
+@app.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    if not current_user.is_admin():
+        abort(403)
+
+    user = User.query.get_or_404(user_id)
+    all_roles = Role.query.all()
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        roles = request.form.getlist('roles')
+
+        pwd = request.form.get('password')
+        pwd2 = request.form.get('password_repeat')
+
+        if pwd or pwd2:
+            if pwd != pwd2:
+                flash("Passwörter stimmen nicht überein.")
+                return redirect(url_for('edit_user', user_id=user.id))
+            user.password_hash = generate_password_hash(pwd, method='scrypt')
+
+        user.username = username
+        user.email = email
+
+        user.roles = []
+        for role_name in roles:
+            r = Role.query.filter_by(name=role_name).first()
+            if r:
+                user.roles.append(r)
+
+        db.session.commit()
+        flash("Benutzer aktualisiert.")
+        return redirect(url_for('admin_users'))
+
+    return render_template('user_form.html', user=user, all_roles=all_roles)
+
 @app.route('/project/new', methods=['GET', 'POST'])
 @login_required
 def create_project():

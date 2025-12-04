@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Benutzer bearbeiten</h2>
+
+<form method="POST" class="card p-4">
+
+    <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">E-Mail</label>
+        <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+    </div>
+
+    <hr>
+
+    <h5>Passwort ändern (optional)</h5>
+    <input type="password" name="password" placeholder="Neues Passwort" class="form-control mb-2">
+    <input type="password" name="password_repeat" placeholder="Passwort wiederholen" class="form-control mb-3">
+
+    <hr>
+
+    <h5>Rollen</h5>
+    {% for role in all_roles %}
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox"
+               name="roles" value="{{ role.name }}"
+               id="role_{{ role.id }}"
+               {% if role in user.roles %}checked{% endif %}>
+        <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }}</label>
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary mt-3">Speichern</button>
+    <a href="{{ url_for('admin_users') }}" class="btn btn-secondary mt-3">Abbrechen</a>
+
+</form>
+
+{% endblock %}

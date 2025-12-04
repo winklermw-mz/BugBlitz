@@ -31,6 +31,10 @@
                     </td>
                     <td>
                         {% if u.username != 'admin' %}
+                        <form method="GET" action="{{ url_for('edit_user', user_id=u.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-primary">Öffnen</button>
+                        </form>
+
                         <form method="POST" style="display:inline;" onsubmit="return confirm('Wirklich löschen?');">
                             <input type="hidden" name="user_id" value="{{ u.id }}">
                             <button type="submit" name="delete" class="btn btn-sm btn-danger">Löschen</button>
