@@ -1,8 +1,7 @@
-import os
+from database import setup_database, setup_login_manager
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, flash, request, abort
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -10,142 +9,24 @@ app.config['SECRET_KEY'] = 'dein-geheimer-schluessel-hier'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bugbench.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+db = setup_database(app)
+login_manager = setup_login_manager(app)
 
+from model.user import User
+from model.role import Role
+from model.tag import Tag
+from model.project import Project
+from model.case import TestCase
+from model.step import TestStep
+from model.run import TestRun
+from model.run_assignment import TestRunAssignment
+from model.step_result import TestStepResult
+from utils.init import create_initial_data
 
-user_roles = db.Table(
-    'user_roles',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('role_id', db.Integer, db.ForeignKey('role.id'))
-)
-
-case_tags = db.Table(
-    'case_tags',
-    db.Column('case_id', db.Integer, db.ForeignKey('test_case.id')),
-    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
-)
-
-class Role(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True)
-
-class Tag(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True)
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=True)
-    password_hash = db.Column(db.String(150), nullable=False)
-    roles = db.relationship('Role', secondary=user_roles, backref='users')
-
-    def has_role(self, role_name):
-        return any(r.name == role_name for r in self.roles)
-    
-    def is_admin(self):
-        return self.has_role('admin')
-
-class Project(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(150), nullable=False)
-    description = db.Column(db.Text)
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    owner = db.relationship('User', backref='projects')
-
-class TestCase(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    sequence = db.Column(db.Integer, default=0)
-    title = db.Column(db.String(150), nullable=False)
-    summary = db.Column(db.Text)
-    precondition = db.Column(db.Text)
-    postcondition = db.Column(db.Text)
-    priority = db.Column(db.String(20))
-    source = db.Column(db.String(100))
-    steps = db.relationship('TestStep', backref='test_case', cascade="all, delete-orphan", order_by='TestStep.step_number')
-    tags = db.relationship('Tag', secondary=case_tags, backref='test_cases')
-    project = db.relationship('Project', backref='test_cases')
-
-class TestStep(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    test_case_id = db.Column(db.Integer, db.ForeignKey('test_case.id'), nullable=False)
-    step_number = db.Column(db.Integer, nullable=False)
-    action = db.Column(db.Text, nullable=False)
-    expected_result = db.Column(db.Text, nullable=False)
-
-class TestRun(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    title = db.Column(db.String(150), nullable=False)
-    start_date = db.Column(db.Date)
-    end_date = db.Column(db.Date)
-    status = db.Column(db.String(20), default='active') # active, finished, aborted
-    assignments = db.relationship('TestRunAssignment', backref='test_run', cascade="all, delete-orphan")
-    project = db.relationship('Project', backref='test_runs')
-
-    def is_active(self):
-        return self.status == "active"
-
-class TestRunAssignment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    test_run_id = db.Column(db.Integer, db.ForeignKey('test_run.id'), nullable=False)
-    test_case_id = db.Column(db.Integer, db.ForeignKey('test_case.id'), nullable=False)
-    tester_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    result = db.Column(db.String(50), default='nicht getestet') 
-    comment = db.Column(db.Text)
-    step_results = db.relationship('TestStepResult', backref='assignment', cascade="all, delete-orphan")
-    
-    test_case = db.relationship('TestCase')
-    tester = db.relationship('User')
-
-class TestStepResult(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    assignment_id = db.Column(db.Integer, db.ForeignKey('test_run_assignment.id'), nullable=False)
-    step_number = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.String(50))
-    comment = db.Column(db.Text)
-
-
-def calculate_statistics(run_id: int) -> dict:
-    all_assigns = TestRunAssignment.query.filter_by(test_run_id=run_id).all()
-    count = len(all_assigns)
-    stats = {
-        'total': count, 
-        'percentage': 0,
-        'ok': 0,
-        'fehlgeschlagen': 0, 
-        'blockiert': 0, 
-        'open': 0,
-    }
-    for a in all_assigns:
-        if a.result in stats: stats[a.result] += 1
-        else: stats['open'] += 1
-    stats["percentage"] = 0 if count == 0 else int(round(100 * (count - stats["open"]) / count, 0))
-    return stats
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-def create_initial_data():
-    with app.app_context():
-        db.create_all()
-        for r_name in ['admin', 'manager', 'tester']:
-            if not Role.query.filter_by(name=r_name).first(): db.session.add(Role(name=r_name))
-        db.session.commit()
-
-        if not User.query.filter_by(username='admin').first():
-            hashed_pw = generate_password_hash('admin', method='scrypt')
-            admin_user = User(username='admin', email='admin@company.ai', password_hash=hashed_pw)
-            admin_role = Role.query.filter_by(name='admin').first()
-            admin_user.roles.append(admin_role)
-            db.session.add(admin_user)
-            db.session.commit()
-            print("Admin 'admin' erstellt.")
 
 @app.route('/')
 @login_required
@@ -280,7 +161,7 @@ def view_project(project_id):
 
     statistics = {}
     for run in project.test_runs:
-        statistics[run.id] = calculate_statistics(run.id)
+        statistics[run.id] = run.calculate_statistics()
     print(statistics)
 
     return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics)
@@ -430,7 +311,7 @@ def execute_run(run_id):
     else:
         assignments = TestRunAssignment.query.filter_by(test_run_id=run.id, tester_id=current_user.id).all()
 
-    stats = calculate_statistics(run.id)
+    stats = run.calculate_statistics()
 
     if request.method == 'POST':
         assign_id = request.form.get('assignment_id')
@@ -463,5 +344,5 @@ def execute_run(run_id):
     return render_template('execute.html', run=run, assignments=assignments, stats=stats)
 
 if __name__ == '__main__':
-    create_initial_data()
+    create_initial_data(app)
     app.run(debug=True)
