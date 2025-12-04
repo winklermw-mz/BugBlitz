@@ -38,7 +38,12 @@ def dashboard():
     if current_user.has_role(ROLE_MANAGER):
         my_projects = Project.query.filter_by(owner_id=current_user.id).all()
         other_projects = Project.query.filter(Project.owner_id != current_user.id).all()
-        return render_template('dashboard.html', my_projects=my_projects, other_projects=other_projects, role_manager=ROLE_MANAGER)
+        return render_template(
+            'dashboard.html', 
+            my_projects=my_projects, 
+            other_projects=other_projects, 
+            role_manager=ROLE_MANAGER
+        )
     
     projects = Project.query.all()
     return render_template('dashboard.html', all_projects=projects, role_manager=ROLE_MANAGER)
@@ -79,7 +84,12 @@ def admin_users():
             if User.query.filter_by(username=uname).first():
                 flash('User already exists.')
             else:
-                new_user = User(username=uname, email=email, password_hash=generate_password_hash(pwd, method='scrypt'))
+                new_user = User(
+                    username=uname, 
+                    email=email, 
+                    password_hash=generate_password_hash(pwd, method='scrypt')
+                )
+                
                 for r_name in selected_roles:
                     r = Role.query.filter_by(name=r_name).first()
                     if r: new_user.roles.append(r)
@@ -164,7 +174,22 @@ def view_project(project_id):
         statistics[run.id] = run.calculate_statistics()
     print(statistics)
 
-    return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics, prio1=PRIORITY_HIGH, prio2=PRIORITY_NORMAL, prio3=PRIORITY_LOW, not_tested=RESULT_NOT_TESTED, blocked=RESULT_BLOCKED, failed=RESULT_FAILED, ok=RESULT_OK, active=STATE_ACTIVE, finished=STATE_FINISHED, aborted=STATE_ABORTED)
+    return render_template(
+        'project_view.html', 
+        project=project, 
+        sorted_cases=sorted_cases, 
+        statistics=statistics, 
+        prio1=PRIORITY_HIGH, 
+        prio2=PRIORITY_NORMAL, 
+        prio3=PRIORITY_LOW, 
+        not_tested=RESULT_NOT_TESTED, 
+        blocked=RESULT_BLOCKED, 
+        failed=RESULT_FAILED, 
+        ok=RESULT_OK, 
+        active=STATE_ACTIVE, 
+        finished=STATE_FINISHED, 
+        aborted=STATE_ABORTED
+    )
 
 @app.route('/project/<int:project_id>/case/new', methods=['GET', 'POST'])
 @app.route('/project/<int:project_id>/case/<int:case_id>/edit', methods=['GET', 'POST'])
@@ -215,7 +240,15 @@ def manage_case(project_id, case_id=None):
         return redirect(url_for('view_project', project_id=project.id))
 
     all_tags = [t.name for t in Tag.query.all()]
-    return render_template('case_form.html', project=project, case=case, all_tags=all_tags, prio1=PRIORITY_HIGH, prio2=PRIORITY_NORMAL, prio3=PRIORITY_LOW)
+    return render_template(
+        'case_form.html', 
+        project=project, 
+        case=case, 
+        all_tags=all_tags, 
+        prio1=PRIORITY_HIGH, 
+        prio2=PRIORITY_NORMAL, 
+        prio3=PRIORITY_LOW
+    )
 
 @app.route('/case/<int:case_id>/delete', methods=['POST'])
 @login_required
@@ -341,7 +374,19 @@ def execute_run(run_id):
             flash('Result saved.')
             return redirect(url_for('execute_run', run_id=run.id))
 
-    return render_template('execute.html', run=run, assignments=assignments, stats=stats, state_active=STATE_ACTIVE, state_aborted=STATE_ABORTED, state_finished=STATE_FINISHED, not_tested=RESULT_NOT_TESTED, blocked=RESULT_BLOCKED, failed=RESULT_FAILED, ok=RESULT_OK)
+    return render_template(
+        'execute.html', 
+        run=run, 
+        assignments=assignments, 
+        stats=stats, 
+        state_active=STATE_ACTIVE, 
+        state_aborted=STATE_ABORTED, 
+        state_finished=STATE_FINISHED, 
+        not_tested=RESULT_NOT_TESTED, 
+        blocked=RESULT_BLOCKED, 
+        failed=RESULT_FAILED,
+        ok=RESULT_OK
+    )
 
 if __name__ == '__main__':
     create_initial_data(app)

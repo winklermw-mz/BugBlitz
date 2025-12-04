@@ -3,7 +3,6 @@ from flask_login import UserMixin
 
 USER_ADMIN = "admin"
 
-
 user_roles = db.Table(
     'user_roles',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),

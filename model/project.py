@@ -1,6 +1,5 @@
 from database import db
 
-
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
