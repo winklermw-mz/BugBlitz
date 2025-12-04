@@ -25,7 +25,7 @@
                 </span>
                 
                 {% if current_user.is_admin() %}
-                <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-light me-2">Benutzerverwaltung</a>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-light me-2">User Management</a>
                 {% endif %}
                 
                 <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger">Logout</a>

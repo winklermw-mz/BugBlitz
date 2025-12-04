@@ -1,5 +1,8 @@
 from database import db
 
+PRIORITY_HIGH = "hoch"
+PRIORITY_NORMAL = "normal"
+PRIORITY_LOW = "low"
 
 case_tags = db.Table(
     'case_tags',

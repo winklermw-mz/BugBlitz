@@ -12,14 +12,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = setup_database(app)
 login_manager = setup_login_manager(app)
 
-from model.user import User
+from model.user import User, USER_ADMIN
 from model.role import Role, ROLE_ADMIN, ROLE_MANAGER, ROLE_TESTER
 from model.tag import Tag
 from model.project import Project
-from model.case import TestCase
+from model.case import TestCase, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 from model.step import TestStep
 from model.run import TestRun
-from model.run_assignment import TestRunAssignment
+from model.run_assignment import TestRunAssignment, RESULT_NOT_TESTED, RESULT_BLOCKED, RESULT_FAILED, RESULT_OK
 from model.step_result import TestStepResult
 from utils.init import create_initial_data
 
@@ -92,7 +92,7 @@ def admin_users():
             
     users = User.query.all()
     all_roles = Role.query.all()
-    return render_template('admin.html', users=users, all_roles=all_roles)
+    return render_template('admin.html', users=users, all_roles=all_roles, admin_id=USER_ADMIN)
 
 @app.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -164,7 +164,7 @@ def view_project(project_id):
         statistics[run.id] = run.calculate_statistics()
     print(statistics)
 
-    return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics)
+    return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics, prio1=PRIORITY_HIGH, prio2=PRIORITY_NORMAL, prio3=PRIORITY_LOW)
 
 @app.route('/project/<int:project_id>/case/new', methods=['GET', 'POST'])
 @app.route('/project/<int:project_id>/case/<int:case_id>/edit', methods=['GET', 'POST'])
@@ -215,7 +215,7 @@ def manage_case(project_id, case_id=None):
         return redirect(url_for('view_project', project_id=project.id))
 
     all_tags = [t.name for t in Tag.query.all()]
-    return render_template('case_form.html', project=project, case=case, all_tags=all_tags)
+    return render_template('case_form.html', project=project, case=case, all_tags=all_tags, prio1=PRIORITY_HIGH, prio2=PRIORITY_NORMAL, prio3=PRIORITY_LOW)
 
 @app.route('/case/<int:case_id>/delete', methods=['POST'])
 @login_required

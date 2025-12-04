@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Testrunde planen</h2>
+<h2>Plan Testing</h2>
 <form method="POST">
-    <div class="mb-3"><label>Titel</label><input type="text" name="title" class="form-control" required></div>
+    <div class="mb-3"><label>Title</label><input type="text" name="title" class="form-control" required></div>
     <div class="row">
         <div class="col-md-6 mb-3"><label>Start</label><input type="date" name="start_date" class="form-control" required></div>
-        <div class="col-md-6 mb-3"><label>Ende Geplant</label><input type="date" name="end_date" class="form-control" required></div>
+        <div class="col-md-6 mb-3"><label>End (planned)</label><input type="date" name="end_date" class="form-control" required></div>
     </div>
     
-    <h4>Testfälle zuweisen</h4>
-    <p class="text-muted small">Wähle für jeden Testfall einen oder mehrere Tester aus.</p>
+    <h4>Assign Test Cases</h4>
+    <p class="text-muted small">Select one or more testers for every test case</p>
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th width="40%">Testfall</th>
-                <th>Tester Auswahl</th>
+                <th width="40%">Test Case</th>
+                <th>Testers</th>
             </tr>
         </thead>
         <tbody>
@@ -41,6 +41,6 @@
         </tbody>
     </table>
     
-    <button type="submit" class="btn btn-primary">Runde Erstellen</button>
+    <button type="submit" class="btn btn-primary">Create Test Plan</button>
 </form>
 {% endblock %}

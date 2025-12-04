@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Benutzer bearbeiten</h2>
+<h2>Edit User</h2>
 
 <form method="POST" class="card p-4">
 
@@ -16,13 +16,13 @@
 
     <hr>
 
-    <h5>Passwort ändern (optional)</h5>
-    <input type="password" name="password" placeholder="Neues Passwort" class="form-control mb-2">
-    <input type="password" name="password_repeat" placeholder="Passwort wiederholen" class="form-control mb-3">
+    <h5>Change password (optional)</h5>
+    <input type="password" name="password" placeholder="New password" class="form-control mb-2">
+    <input type="password" name="password_repeat" placeholder="Password confirmation" class="form-control mb-3">
 
     <hr>
 
-    <h5>Rollen</h5>
+    <h5>Roles</h5>
     {% for role in all_roles %}
     <div class="form-check">
         <input class="form-check-input" type="checkbox"
@@ -34,8 +34,8 @@
     {% endfor %}
 
     <div class="d-flex justify-content-start gap-2 mt-3">
-        <button type="submit" class="btn btn-primary btn-sm">Speichern</button>
-        <a href="{{ url_for('admin_users') }}" class="btn btn-secondary btn-sm">Abbrechen</a>
+        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+        <a href="{{ url_for('admin_users') }}" class="btn btn-secondary btn-sm">Cancel</a>
     </div>
 </form>
 

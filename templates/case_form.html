@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>{{ 'Testfall bearbeiten' if case.id else 'Neuer Testfall' }}</h2>
+<h2>{{ 'Edit Test Case' if case.id else 'New Test Case' }}</h2>
 <form method="POST">
     <div class="row">
-        <div class="col-md-8 mb-3"><label>Titel</label><input type="text" name="title" class="form-control" value="{{ case.title or '' }}" required></div>
+        <div class="col-md-8 mb-3"><label>Title</label><input type="text" name="title" class="form-control" value="{{ case.title or '' }}" required></div>
         <div class="col-md-1 mb-3">
-            <label>Sortiernr.</label>
+            <label>Sort</label>
             <input type="number" name="sequence" class="form-control" value="{{ case.sequence or 0 }}" required>
         </div>
         <div class="col-md-3 mb-3">
-            <label>Priorität</label>
+            <label>Priority</label>
             <select name="priority" class="form-select">
-                <option value="hoch" {% if case.priority=='hoch' %}selected{% endif %}>Hoch</option>
-                <option value="mittel" {% if case.priority=='mittel' %}selected{% endif %}>Mittel</option>
-                <option value="niedrig" {% if case.priority=='niedrig' %}selected{% endif %}>Niedrig</option>
+                <option value="{{ prio1 }}" {% if case.priority == prio1 %}selected{% endif %}>High</option>
+                <option value="{{ prio2 }}" {% if case.priority == prio2 %}selected{% endif %}>Normal</option>
+                <option value="{{ prio3 }}" {% if case.priority == prio3 %}selected{% endif %}>Low</option>
             </select>
         </div>
     </div>
@@ -24,16 +24,16 @@
             {% for t in all_tags %}<option value="{{ t }}">{% endfor %}
         </datalist>
     </div>
-    <div class="mb-3"><label>Zusammenfassung</label><input type="text" name="summary" class="form-control" value="{{ case.summary or '' }}"></div>
+    <div class="mb-3"><label>Summary</label><input type="text" name="summary" class="form-control" value="{{ case.summary or '' }}"></div>
     <div class="row">
-        <div class="col-md-6 mb-3"><label>Vorbedingung</label><textarea name="precondition" class="form-control">{{ case.precondition or '' }}</textarea></div>
-        <div class="col-md-6 mb-3"><label>Nachbedingung</label><textarea name="postcondition" class="form-control">{{ case.postcondition or '' }}</textarea></div>
+        <div class="col-md-6 mb-3"><label>Preconditions</label><textarea name="precondition" class="form-control">{{ case.precondition or '' }}</textarea></div>
+        <div class="col-md-6 mb-3"><label>Postconditions</label><textarea name="postcondition" class="form-control">{{ case.postcondition or '' }}</textarea></div>
     </div>
-    <div class="mb-3"><label>Quelle</label><input type="text" name="source" class="form-control" value="{{ case.source or '' }}"></div>
+    <div class="mb-3"><label>Source</label><input type="text" name="source" class="form-control" value="{{ case.source or '' }}"></div>
     
-    <h4>Testschritte</h4>
+    <h4>Steps</h4>
     <table class="table" id="stepsTable">
-        <thead><tr><th width="5%">#</th><th>Aktion</th><th>Erwartetes Ergebnis</th><th>Aktion</th></tr></thead>
+        <thead><tr><th width="5%">#</th><th>Action</th><th>Expected Result</th><th>Action</th></tr></thead>
         <tbody>
             {% for step in case.steps %}
             <tr>
@@ -60,10 +60,10 @@
             {% endfor %}
         </tbody>
     </table>
-    <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="addStep()">+ Schritt</button>
+    <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="addStep()">+ Step</button>
     <br>
-    <button type="submit" class="btn btn-primary">Speichern</button>
-    <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-light">Abbrechen</a>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-light">Cancel</a>
 </form>
 
 <script>

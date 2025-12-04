@@ -1,27 +1,27 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Benutzerverwaltung</h2>
+<h2>User Management</h2>
 <div class="row">
     <div class="col-md-4">
         <form method="POST" class="card p-3">
-            <h5>Neuer Benutzer</h5>
+            <h5>New User</h5>
             <input type="text" name="username" placeholder="Username" class="form-control mb-2" required>
             <input type="text" name="email" placeholder="E-Mail" class="form-control mb-2" required>
-            <input type="password" name="password" placeholder="Passwort" class="form-control mb-2" required>
-            <input type="password" name="password_repeat" placeholder="Passwort wiederholen" class="form-control mb-2" required>
-            <label class="form-label">Rollen:</label>
+            <input type="password" name="password" placeholder="Password" class="form-control mb-2" required>
+            <input type="password" name="password_repeat" placeholder="Password confirmation" class="form-control mb-2" required>
+            <label class="form-label">Roles:</label>
             {% for role in all_roles %}
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="roles" value="{{ role.name }}" id="role_{{role.id}}">
                 <label class="form-check-label" for="role_{{role.id}}">{{ role.name }}</label>
             </div>
             {% endfor %}
-            <button type="submit" name="create" class="btn btn-success mt-2">Erstellen</button>
+            <button type="submit" name="create" class="btn btn-success mt-2">Create</button>
         </form>
     </div>
     <div class="col-md-8">
         <table class="table bg-white">
-            <thead><tr><th>User</th><th>E-Mail</th><th>Rollen</th><th>Aktion</th></tr></thead>
+            <thead><tr><th>User</th><th>E-Mail</th><th>Roles</th><th>Aktion</th></tr></thead>
             <tbody>
                 {% for u in users %}
                 <tr>
@@ -31,14 +31,14 @@
                         {% for r in u.roles %}<span class="badge bg-secondary">{{ r.name }}</span> {% endfor %}
                     </td>
                     <td>
-                        {% if u.username != 'admin' %}
+                        {% if u.username != admin_id %}
                         <form method="GET" action="{{ url_for('edit_user', user_id=u.id) }}" style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-primary">Öffnen</button>
+                            <button type="submit" class="btn btn-sm btn-primary">Open</button>
                         </form>
 
-                        <form method="POST" style="display:inline;" onsubmit="return confirm('Wirklich löschen?');">
+                        <form method="POST" style="display:inline;" onsubmit="return confirm('Delete user now?');">
                             <input type="hidden" name="user_id" value="{{ u.id }}">
-                            <button type="submit" name="delete" class="btn btn-sm btn-danger">Löschen</button>
+                            <button type="submit" name="delete" class="btn btn-sm btn-danger">Delete</button>
                         </form>
                         {% endif %}
                     </td>
