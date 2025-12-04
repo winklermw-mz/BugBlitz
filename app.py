@@ -292,7 +292,13 @@ def manage_case(project_id, case_id=None):
     project = Project.query.get_or_404(project_id)
     if not (current_user.is_admin() or (current_user.has_role('manager') and project.owner_id == current_user.id)): abort(403)
 
-    case = TestCase.query.get(case_id) if case_id else TestCase(project_id=project.id)
+    if case_id:
+        case = TestCase.query.get(case_id)
+    else:
+        case = TestCase(project_id=project.id)
+        max_seq = db.session.query(db.func.max(TestCase.sequence)).filter_by(project_id=project.id).scalar()
+        case.sequence = (max_seq or 0) + 1
+
 
     if request.method == 'POST':
         case.sequence = int(request.form.get('sequence', 0))
