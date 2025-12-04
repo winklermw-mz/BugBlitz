@@ -384,4 +384,4 @@ def execute_run(run_id):
 
 if __name__ == '__main__':
     create_initial_data(app)
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8100, debug=False)
