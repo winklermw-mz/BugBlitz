@@ -99,16 +99,16 @@
                                 <small class="text-muted">Results:</small><br>
                                 {% for key, value in statistics[run.id].items() %}
                                     {% if key == ok %}
-                                        <span class="badge bg-success">{{ value }}</span>
+                                        <span class="badge bg-success bg-opaque">{{ value }}</span>
                                     {% endif %}
                                     {% if key == failed %}
-                                        <span class="badge bg-danger">{{ value }}</span>
+                                        <span class="badge bg-danger bg-opaque">{{ value }}</span>
                                     {% endif %}
                                     {% if key == blocked %}
-                                        <span class="badge bg-warning text-dark">{{ value }}</span>
+                                        <span class="badge bg-warning bg-opaque">{{ value }}</span>
                                     {% endif %}
                                     {% if key == not_tested %}
-                                        <span class="badge bg-secondary">{{ value }}</span>
+                                        <span class="badge bg-secondary bg-opaque">{{ value }}</span>
                                     {% endif %}
                                 {% endfor %}
                             </div>

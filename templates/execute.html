@@ -11,12 +11,12 @@
     {% if current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id) %}
     <form method="POST" action="{{ url_for('update_run_status', run_id=run.id) }}" class="d-flex gap-2">
         {% if run.status == state_active %}
-            <button name="status" value="{{ state_finished }}" class="btn btn-primary">Close Test Plan</button>
-            <button name="status" value="{{ state_aborted }}" class="btn btn-danger">Abort Test Execution</button>
+            <button name="status" value="{{ state_finished }}" class="btn btn-primary">Finish</button>
+            <button name="status" value="{{ state_aborted }}" class="btn btn-danger">Abort</button>
         {% else %}
-            <button name="status" value="{{ state_active }}" class="btn btn-outline-primary">Restart Test Execution</button>
+            <button name="status" value="{{ state_active }}" class="btn btn-primary">Restart</button>
         {% endif %}
-        <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-light">Back to Project</a>
+        <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-light">Back</a>
     </form>
     {% endif %}
 </div>
