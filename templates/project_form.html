@@ -10,6 +10,9 @@
         <label>Beschreibung</label>
         <textarea name="description" class="form-control"></textarea>
     </div>
-    <button type="submit" class="btn btn-primary">Speichern</button>
+    <div class="d-flex justify-content-start gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">Speichern</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Abbrechen</a>
+    </div>
 </form>
 {% endblock %}
