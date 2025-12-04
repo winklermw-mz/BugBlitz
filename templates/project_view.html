@@ -77,8 +77,12 @@
                 {% for run in project.test_runs %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
-                        <strong>{{ run.title }}</strong> 
-                        <span class="badge bg-secondary bg-opaque">{{ run.status }}</span>
+                        <strong>{{ run.title }}</strong>
+                            {% if run.status == active %}
+                                <span class="badge bg-success">{{ run.status }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ run.status }}</span>
+                            {% endif %}
                         <br>
                         <small>{{ run.start_date }} bis {{ run.end_date }}<br>
                         {% if run.id in statistics %}

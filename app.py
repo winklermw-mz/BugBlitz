@@ -164,7 +164,7 @@ def view_project(project_id):
         statistics[run.id] = run.calculate_statistics()
     print(statistics)
 
-    return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics, prio1=PRIORITY_HIGH, prio2=PRIORITY_NORMAL, prio3=PRIORITY_LOW, not_tested=RESULT_NOT_TESTED, blocked=RESULT_BLOCKED, failed=RESULT_FAILED, ok=RESULT_OK)
+    return render_template('project_view.html', project=project, sorted_cases=sorted_cases, statistics=statistics, prio1=PRIORITY_HIGH, prio2=PRIORITY_NORMAL, prio3=PRIORITY_LOW, not_tested=RESULT_NOT_TESTED, blocked=RESULT_BLOCKED, failed=RESULT_FAILED, ok=RESULT_OK, active=STATE_ACTIVE, finished=STATE_FINISHED, aborted=STATE_ABORTED)
 
 @app.route('/project/<int:project_id>/case/new', methods=['GET', 'POST'])
 @app.route('/project/<int:project_id>/case/<int:case_id>/edit', methods=['GET', 'POST'])
