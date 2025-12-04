@@ -21,11 +21,12 @@
     </div>
     <div class="col-md-8">
         <table class="table bg-white">
-            <thead><tr><th>User</th><th>Rollen</th><th>Aktion</th></tr></thead>
+            <thead><tr><th>User</th><th>E-Mail</th><th>Rollen</th><th>Aktion</th></tr></thead>
             <tbody>
                 {% for u in users %}
                 <tr>
                     <td>{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
                     <td>
                         {% for r in u.roles %}<span class="badge bg-secondary">{{ r.name }}</span> {% endfor %}
                     </td>
