@@ -1,28 +1,26 @@
-import lmstudio as lms
+from openai import OpenAI
 import json
 from model.case import PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 
 
-def call_ai_model(requirement_text):
-    model = lms.llm("qwen/qwen3-vl-4b")
-    response = model.respond(
-        {
-            "messages":
-            [
-                {
-                    "role": "system",
-                    "content": get_system_prompt(),
-                },
-                {
-                    "role": "user",
-                    "content": f"Die Anforderung lautet: {requirement_text}"
-                }
-            ]
-        }
+def call_ai_model(host: str, api_key:str, requirement: str) -> list:
+    client = OpenAI(base_url=host, api_key=api_key)
+    response = client.chat.completions.create(
+        model="qwen/qwen3-vl-4b",
+        messages=[
+            {
+                "role": "system",
+                "content": get_system_prompt(),
+            },
+            {
+                "role": "user",
+                "content": f"Die Anforderung lautet: {requirement}"
+            }
+        ]
     )
-    return json.loads(str(response))
+    return json.loads(str(response.choices[0].message.content))
 
-def get_system_prompt():
+def get_system_prompt() -> str:
     return f"""
         Du bist ein Experte für Softwaretest und Qualitätssicherung.
         Deine Aufgabe ist es, aus einer gegebenen **Anforderung** eine Liste von 1 bis N detaillierten **Testfällen** zu generieren.

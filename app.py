@@ -335,7 +335,7 @@ def extract_case_ai(project_id):
         flash('Error: Requirement text is empty.', 'error')
         return redirect(url_for('create_case_ai_form', project_id=project.id))
 
-    generated_cases_data = call_ai_model(requirement_text)
+    generated_cases_data = call_ai_model("http://localhost:1234/v1", "lm-studio", requirement_text)
     
     if generated_cases_data is None:
         flash('Error: Could not connect to AI model.', 'error')
