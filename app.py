@@ -311,7 +311,7 @@ def sort_case(case_id, direction):
         
     return redirect(url_for('view_project', project_id=project.id))
 
-# ROUTE: Formular zur KI-basierten Testfallerstellung
+# ROUTE: Wizard for AI supported test case generation
 @app.route('/project/<int:project_id>/case/ai')
 @login_required
 def create_case_ai_form(project_id):
@@ -321,7 +321,7 @@ def create_case_ai_form(project_id):
         
     return render_template('case_ai_form.html', project=project)
 
-# ROUTE: API-Endpunkt zur Extraktion der Testfälle durch KI
+# ROUTE: AI generated test cases
 @app.route('/project/<int:project_id>/case/ai/extract', methods=['POST'])
 @login_required
 def extract_case_ai(project_id):
