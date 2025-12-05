@@ -82,7 +82,7 @@
                     {% else %}bg-secondary{% endif %}">
                     {{ assign.result }}
                 </span>
-                {{ assign.test_case.title }} &nbsp; <small class="text-muted">(Tester: {{ assign.tester.username }})</small>
+                {{ assign.test_case.title }} &nbsp; <small class="text-muted">(@{{ assign.tester.username }})</small>
             </button>
         </h2>
         <div id="c{{ assign.id }}" class="accordion-collapse collapse" data-bs-parent="#accordionCases">

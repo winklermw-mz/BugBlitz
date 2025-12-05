@@ -39,13 +39,23 @@
                                 {% endif %}
 
                                 {% if run['overdue'] %}
-                                    <span class="badge bg-danger">overdue</span>
+                                    {% if run['state'] == state_created %}
+                                        <span class="badge bg-danger">start overdue</span>
+                                    {% elif run['state'] == state_active %}
+                                        <span class="badge bg-danger">end overdue</span>
+                                    {% endif %}    
                                 {% endif %}
                             </small>
                         </h5>
 
                         <p class="text-muted small mb-2">
-                            Open tests: {{ run['open_tests'] }}<br>Due date: {{ run['run'].end_date }}
+                            Open tests: {{ run['open_tests'] }}<br>
+                            
+                            {% if run['state'] == state_created %}
+                                Due date: {{ run['run'].start_date }}
+                            {% elif run['state'] == state_active %}
+                                Due date: {{ run['run'].end_date }}
+                            {% endif %}
                         </p>
                     </div>
                 </div>

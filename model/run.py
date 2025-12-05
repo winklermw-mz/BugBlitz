@@ -23,13 +23,17 @@ class TestRun(db.Model):
     def is_created(self):
         return self.status == STATE_CREATED
     
+    def is_overdue(self):
+        return (self.status == STATE_ACTIVE and self.end_date < date.today()) or \
+                (self.status == STATE_CREATED and self.start_date < date.today())
+    
     def calculate_statistics(self) -> dict:
         all_assigns = TestRunAssignment.query.filter_by(test_run_id=self.id).all()
         count = len(all_assigns)
         stats = {
             "total": count, 
             "percentage": 0,
-            "overdue": self.status == STATE_ACTIVE and self.end_date < date.today(),
+            "overdue": self.is_overdue(),
             RESULT_OK: 0,
             RESULT_FAILED: 0, 
             RESULT_BLOCKED: 0, 

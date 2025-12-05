@@ -1,6 +1,6 @@
 from datetime import date
 from utils.database import db
-from model.run import STATE_ACTIVE
+from model.run import STATE_FINISHED, STATE_ABORTED, STATE_ACTIVE, STATE_CREATED
 from model.run_assignment import TestRunAssignment, RESULT_NOT_TESTED
 
 class Project(db.Model):
@@ -13,7 +13,7 @@ class Project(db.Model):
     def get_open_runs(self, user) -> dict:
         my_runs = {}
         for run in self.test_runs:
-            if run.status != STATE_ACTIVE:
+            if run.status == STATE_ABORTED or run.status == STATE_FINISHED:
                 continue
 
             assignments = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
@@ -26,6 +26,7 @@ class Project(db.Model):
                 my_runs[run.id] = {
                     "run": run, 
                     "open_tests": len(open_tests),
-                    "overdue": run.end_date < date.today(),
+                    "overdue": run.is_overdue(),
+                    "state": run.status,
                 }
         return my_runs

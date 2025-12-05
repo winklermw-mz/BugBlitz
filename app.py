@@ -45,13 +45,24 @@ def dashboard():
         my_runs |= project.get_open_runs(current_user)
 
     if current_user.is_admin():
-        return render_template('dashboard.html', my_projects=all_projects, my_runs=my_runs)
+        return render_template(
+            'dashboard.html', 
+            my_projects=all_projects, 
+            my_runs=my_runs, 
+            state_created=STATE_CREATED, 
+            state_active=STATE_ACTIVE
+        )
     
     if current_user.is_test_manager():
         my_projects = Project.query.filter_by(owner_id=current_user.id).all()
-        return render_template('dashboard.html', my_projects=my_projects, my_runs=my_runs)
+        return render_template('dashboard.html', 
+            my_projects=my_projects, 
+            my_runs=my_runs, 
+            state_created=STATE_CREATED, 
+            state_active=STATE_ACTIVE
+        )
 
-    return render_template('dashboard.html', my_runs=my_runs)
+    return render_template('dashboard.html', my_runs=my_runs, state_created=STATE_CREATED, state_active=STATE_ACTIVE)
 
 # ROUTE: Login form, redirected to dashboard
 @app.route('/login', methods=['GET', 'POST'])
