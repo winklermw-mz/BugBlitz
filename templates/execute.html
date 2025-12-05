@@ -59,7 +59,7 @@
 
                     <div class="mb-3">
                         <div class="mt-2" id="steps{{ assign.id }}">
-                            <table class="table table-bordered table-sm">
+                            <table class="table table-sm table-teststeps">
                                 <thead class="table-light"><tr><th width="3%"></th><th>Action</th><th>Expected Result</th><th width="30%">Result (optional)</th></tr></thead>
                                 <tbody>
                                     {% for step in assign.test_case.steps %}
@@ -155,5 +155,30 @@
     </form>
     {% endif %}
 </div>
+
+<style>
+.table.table-teststeps {
+    background-color: white;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table.table-teststeps th,
+.table.table-teststeps td {
+    border: none !important;
+}
+
+.table.table-teststeps tr {
+    border-bottom: 1px solid #ddd;
+}
+
+.table.table-teststeps thead tr {
+    border-bottom: 2px solid #ccc;
+}
+
+.table.table-teststeps tbody tr:last-child {
+    border-bottom: none;
+}
+</style>
 
 {% endblock %}
