@@ -1,47 +1,186 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Plan Testing</h2>
-<form method="POST">
-    <div class="mb-3"><label>Title</label><input type="text" name="title" class="form-control" required></div>
-    <div class="row">
-        <div class="col-md-6 mb-3"><label>Start</label><input type="date" name="start_date" class="form-control" required></div>
-        <div class="col-md-6 mb-3"><label>End (planned)</label><input type="date" name="end_date" class="form-control" required></div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="m-0">Plan Testing</h2>
+    <div>
+        <button type="submit" form="testplanform" class="btn btn-primary">Create Test Plan</button>
+        <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
     </div>
-    
+</div>
+
+
+<form method="POST" id="testplanform">
+    <div class="mb-3">
+        <label>Title</label>
+        <input type="text" name="title" class="form-control" required>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label>Start</label>
+            <input type="date" name="start_date" class="form-control" required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label>End (planned)</label>
+            <input type="date" name="end_date" class="form-control" required>
+        </div>
+    </div>
+
     <h4>Assign Test Cases</h4>
-    <p class="text-muted small">Select one or more testers for every test case</p>
+    <p class="text-muted small">
+        Select test cases, then choose testers and apply them in bulk.
+    </p>
+
+    <div class="card p-3 mb-3">
+        <h5>Assign testers to selected test cases</h5>
+
+        <div class="row">
+            {% for t in testers %}
+            <div class="col-md-3">
+                <div class="form-check">
+                    <input class="form-check-input global-tester" 
+                           type="checkbox" 
+                           value="{{ t.id }}" 
+                           id="global_t{{ t.id }}">
+                    <label class="form-check-label" for="global_t{{ t.id }}">
+                        {{ t.username }}
+                    </label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" class="btn btn-sm btn-primary mt-2" onclick="applyTesters()">
+            Apply to selected cases
+        </button>
+    </div>
+
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th width="40%">Test Case</th>
-                <th>Testers</th>
+                <th width="5%">
+                    <input type="checkbox" id="select_all_cases">
+                </th>
+                <th width="35%">Test Case</th>
+                <th>Assigned Testers</th>
             </tr>
         </thead>
+
         <tbody>
             {% for case in project.test_cases %}
-            <tr>
+            <tr data-case-id="{{ case.id }}">
+                <td>
+                    <input type="checkbox" class="select_case">
+                </td>
                 <td>
                     <strong>{{ case.title }}</strong><br>
-                    {% for tag in case.tags %}<span class="badge bg-light text-dark">{{ tag.name }}</span>{% endfor %}
+                    {% for tag in case.tags %}
+                    <span class="badge bg-light text-dark">{{ tag.name }}</span>
+                    {% endfor %}
                 </td>
                 <td>
-                    <div class="row">
-                    {% for t in testers %}
-                        <div class="col-md-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="assign_case_{{ case.id }}" value="{{ t.id }}" id="c{{case.id}}_t{{t.id}}">
-                                <label class="form-check-label" for="c{{case.id}}_t{{t.id}}">{{ t.username }}</label>
-                            </div>
-                        </div>
-                    {% endfor %}
+
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div id="badges_case_{{ case.id }}" class="assigned-tester-badges mb-2"></div>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary ms-2"
+                                onclick="toggleCaseEditor({{ case.id }})">
+                            Edit
+                        </button>
                     </div>
+                    <div class="d-none mt-2" id="checkboxes_case_{{ case.id }}">
+                        <div class="row">
+                            {% for t in testers %}
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input tester-checkbox"
+                                           type="checkbox"
+                                           name="assign_case_{{ case.id }}"
+                                           value="{{ t.id }}"
+                                           id="c{{ case.id }}_t{{ t.id }}"
+                                           onchange="refreshBadges({{ case.id }})">
+                                    <label class="form-check-label" for="c{{ case.id }}_t{{ t.id }}">
+                                        {{ t.username }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
                 </td>
+
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    
+
     <button type="submit" class="btn btn-primary">Create Test Plan</button>
     <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
 </form>
+
+<script>
+document.getElementById("select_all_cases").addEventListener("change", function () {
+    document.querySelectorAll(".select_case").forEach(cb => cb.checked = this.checked);
+});
+
+function toggleCaseEditor(caseId) {
+    const box = document.getElementById("checkboxes_case_" + caseId);
+    box.classList.toggle("d-none");
+}
+
+function refreshBadges(caseId) {
+    const badgeContainer = document.getElementById("badges_case_" + caseId);
+    badgeContainer.innerHTML = "";
+
+    document.querySelectorAll(`#checkboxes_case_${caseId} .tester-checkbox:checked`)
+        .forEach(cb => {
+            const label = document.querySelector(`label[for="${cb.id}"]`).innerText;
+
+            const badge = document.createElement("span");
+            badge.className = "badge bg-secondary me-1";
+            badge.innerText = label;
+
+            badgeContainer.appendChild(badge);
+        });
+}
+
+function applyTesters() {
+    const testersToApply = [...document.querySelectorAll(".global-tester:checked")]
+        .map(cb => cb.value);
+
+    if (testersToApply.length === 0) {
+        alert("Please select at least one tester.");
+        return;
+    }
+
+    const selectedCases = [...document.querySelectorAll(".select_case:checked")];
+    if (selectedCases.length === 0) {
+        alert("Please select at least one test case.");
+        return;
+    }
+
+    selectedCases.forEach(caseCheckbox => {
+        const row = caseCheckbox.closest("tr");
+        const caseId = row.dataset.caseId;
+
+        testersToApply.forEach(testerId => {
+            const cb = document.getElementById(`c${caseId}_t${testerId}`);
+            if (cb) cb.checked = true;
+        });
+
+        refreshBadges(caseId);
+    });
+
+    document.querySelectorAll(".global-tester").forEach(cb => cb.checked = false);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("tr[data-case-id]").forEach(row => {
+        refreshBadges(row.dataset.caseId);
+    });
+});
+</script>
+
 {% endblock %}
