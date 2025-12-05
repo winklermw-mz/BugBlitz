@@ -38,6 +38,8 @@
             {% for message in messages %}
                 {% if message.startswith("Error: ") %}
                     <div class="alert alert-danger mt-2">{{ message }}</div>
+                {% elif message.startswith("Warning: ") %}
+                    <div class="alert alert-warning mt-2">{{ message }}</div>
                 {% else %}
                     <div class="alert alert-success mt-2">{{ message }}</div>
                 {% endif %}        

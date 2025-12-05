@@ -9,15 +9,36 @@
         </span>
     </div>
     {% if current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id) %}
-    <form method="POST" action="{{ url_for('update_run_status', run_id=run.id) }}" class="d-flex gap-2">
-        {% if run.status == state_active %}
-            <button name="status" value="{{ state_finished }}" class="btn btn-primary">Finish</button>
-            <button name="status" value="{{ state_aborted }}" class="btn btn-danger">Abort</button>
-        {% else %}
-            <button name="status" value="{{ state_active }}" class="btn btn-primary">Restart</button>
+    <div class="d-flex justify-content-end gap-2">
+        {% if run.status == state_created %}
+            <a href="{{ url_for('edit_run', run_id=run.id) }}" class="btn btn-info">Edit Assignments</a>
+            
+            <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
+                <input type="hidden" name="status" value="{{ state_active }}">
+                <button type="submit" class="btn btn-success">Start</button>
+            </form>
         {% endif %}
+        
+        {% if run.status == state_active %}
+            <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to reset the test plan for modifications? All existing test results will be lost.');">
+                <input type="hidden" name="status" value="{{ state_created }}">
+                <button type="submit" class="btn btn-info">Modify</button>
+            </form>
+            
+            <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
+                <button name="status" value="{{ state_finished }}" class="btn btn-primary">Finish</button>
+            </form>
+            <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to abort the test plan? Further testing will not be possible.');">
+                <button name="status" value="{{ state_aborted }}" class="btn btn-danger">Abort</button>
+            </form>
+        {% elif run.status == state_aborted or run.status == state_finished %}
+            <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
+                <button name="status" value="{{ state_active }}" class="btn btn-primary">Restart</button>
+            </form>
+        {% endif %}
+        
         <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-light">Back</a>
-    </form>
+    </div>
     {% endif %}
 </div>
 
@@ -159,18 +180,38 @@
     {% endfor %}
 </div>
 
-<div class="d-flex justify-content-start align-items-center mt-4">
-    {% if current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id) %}
-    <form method="POST" action="{{ url_for('update_run_status', run_id=run.id) }}" class="d-flex gap-2">
-        {% if run.status == state_active %}
-            <button name="status" value="{{ state_finished }}" class="btn btn-primary">Finish</button>
-            <button name="status" value="{{ state_aborted }}" class="btn btn-danger">Abort</button>
-        {% else %}
-            <button name="status" value="{{ state_active }}" class="btn btn-primary">Restart</button>
-        {% endif %}
-        <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-light">Back</a>
-    </form>
+<div class="d-flex justify-content-start align-items-center mt-4 gap-2">
+{% if current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id) %}
+    {% if run.status == state_created %}
+        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
+            <input type="hidden" name="status" value="{{ state_active }}">
+            <button type="submit" class="btn btn-success">Start</button>
+        </form>
     {% endif %}
+
+    {% if run.status == state_active %}
+        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to reset the test plan for modifications? All existing test results will be lost.');">
+            <input type="hidden" name="status" value="{{ state_created }}">
+            <button type="submit" class="btn btn-info">Modify</button>
+        </form>
+    {% endif %}
+    
+    {% if run.status == state_active %}
+        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to close the test plan? All test cases must be completed.');">
+            <input type="hidden" name="status" value="{{ state_finished }}">
+            <button type="submit" class="btn btn-primary">Finish</button>
+        </form>
+    {% endif %}
+
+    {% if run.status == state_active %}
+        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to abort the test plan?');">
+            <input type="hidden" name="status" value="{{ state_aborted }}">
+            <button type="submit" class="btn btn-danger">Abort</button>
+        </form>
+    {% endif %}
+
+    <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-light">Back</a>
+{% endif %}
 </div>
 
 <style>

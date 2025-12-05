@@ -1,29 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
 
+{% set form_title = run.title if run else 'Plan Testing' %}
+{% set button_text = 'Update Test Plan' if run else 'Create Test Plan' %}
+{% set form_action = url_for('update_run', run_id=run.id) if run else url_for('create_run', project_id=project.id) %}
+
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="m-0">Plan Testing</h2>
+    <h2 class="m-0">{{ form_title }}</h2> 
     <div>
-        <button type="submit" form="testplanform" class="btn btn-primary">Create Test Plan</button>
+        <button type="submit" form="testplanform" class="btn btn-primary">{{ button_text }}</button>
         <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </div>
 
-
-<form method="POST" id="testplanform">
+<form method="POST" id="testplanform" action="{{ form_action }}">
     <div class="mb-3">
         <label>Title</label>
-        <input type="text" name="title" class="form-control" required>
+        <input type="text" name="title" class="form-control" required value="{{ run.title if run else '' }}">
     </div>
 
     <div class="row">
         <div class="col-md-6 mb-3">
             <label>Start</label>
-            <input type="date" name="start_date" class="form-control" required>
+            <input type="date" name="start_date" class="form-control" required value="{{ run.start_date.strftime('%Y-%m-%d') if run else '' }}">
         </div>
         <div class="col-md-6 mb-3">
             <label>End (planned)</label>
-            <input type="date" name="end_date" class="form-control" required>
+            <input type="date" name="end_date" class="form-control" required value="{{ run.end_date.strftime('%Y-%m-%d') if run else '' }}">
         </div>
     </div>
 
@@ -110,7 +113,11 @@
                                            name="assign_case_{{ case.id }}"
                                            value="{{ t.id }}"
                                            id="c{{ case.id }}_t{{ t.id }}"
-                                           onchange="refreshBadges({{ case.id }})">
+                                           onchange="refreshBadges({{ case.id }})"
+                                           {% if run and case.id in current_assignments and t.id in current_assignments[case.id] %}
+                                           checked
+                                           {% endif %}
+                                           >
                                     <label class="form-check-label" for="c{{ case.id }}_t{{ t.id }}">
                                         {{ t.username }}
                                     </label>
@@ -127,11 +134,13 @@
         </tbody>
     </table>
 
-    <button type="submit" class="btn btn-primary">Create Test Plan</button>
+    <button type="submit" class="btn btn-primary">{{ button_text }}</button>
     <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
 </form>
 
 <script>
+// ... (JavaScript-Funktionen bleiben unverändert) ...
+
 document.getElementById("select_all_cases").addEventListener("change", function () {
     document.querySelectorAll(".select_case").forEach(cb => cb.checked = this.checked);
 });

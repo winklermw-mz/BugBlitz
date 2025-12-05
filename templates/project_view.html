@@ -95,11 +95,14 @@
                 <div class="card h-100 shadow-sm">
                     <div class="card-body position-relative">
                         <a href="{{ url_for('execute_run', run_id=run.id) }}" class="btn btn-sm btn-outline-primary position-absolute" style="top: 10px; right: 10px;">Open</a>
-
+                
                         <h5 class="card-title pe-5">
                             {{ run.title }}&nbsp;
                             {% if run.status == active %}
                                 <small><span class="badge bg-success">{{ run.status }}</span></small>
+                            {% endif %}
+                            {% if run.status == created %}
+                                <small><span class="badge bg-info">{{ run.status }}</span></small>
                             {% endif %}
                             {% if run.status == finished or run.status == aborted %}
                                 <small><span class="badge bg-secondary">{{ run.status }}</span></small>

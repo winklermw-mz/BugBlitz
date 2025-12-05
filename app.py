@@ -23,7 +23,7 @@ from model.tag import Tag
 from model.project import Project
 from model.case import TestCase, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 from model.step import TestStep
-from model.run import TestRun, STATE_ABORTED, STATE_ACTIVE, STATE_FINISHED
+from model.run import TestRun, STATE_ABORTED, STATE_ACTIVE, STATE_FINISHED, STATE_CREATED
 from model.run_assignment import TestRunAssignment, RESULT_NOT_TESTED, RESULT_BLOCKED, RESULT_FAILED, RESULT_OK
 from model.step_result import TestStepResult
 from utils.init import create_initial_data
@@ -206,7 +206,8 @@ def view_project(project_id):
         ok=RESULT_OK, 
         active=STATE_ACTIVE, 
         finished=STATE_FINISHED, 
-        aborted=STATE_ABORTED
+        aborted=STATE_ABORTED,
+        created=STATE_CREATED
     )
 
 # ROUTE: New test case, modify test case
@@ -394,7 +395,7 @@ def extract_case_ai(project_id):
         db.session.commit()
         num_created += 1
 
-    flash(f"{num_created} Test cases successfully generated and added to the current project. All generated test cases have been marked with tag #gen-ai automatically.")
+    flash(f"{num_created} test cases successfully generated and added to the current project. All generated test cases have been marked with tag #gen-ai automatically.")
     return redirect(url_for('view_project', project_id=project.id))
 
 # ROUTE: New test run
@@ -424,6 +425,7 @@ def create_run(project_id):
                     db.session.add(assign)
         
         db.session.commit()
+        flash(f'New test Plan "{run.title}" created.')
         return redirect(url_for('view_project', project_id=project.id))
 
     potential_testers = User.query.filter(User.roles.any(Role.name.in_([ROLE_TESTER, ROLE_MANAGER]))).all()
@@ -436,6 +438,71 @@ def create_run(project_id):
         prio3=PRIORITY_LOW
     )
 
+# ROUTE: Modify existing test run (only possible in STATE_CREATED)
+@app.route('/run/<int:run_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_run(run_id):
+    run = TestRun.query.get_or_404(run_id)
+    project = run.project
+
+    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
+        abort(403)
+        
+    if run.status != STATE_CREATED:
+        flash(f'Error: Test Plan must be in status "{STATE_CREATED}" for editing assignments.', 'error')
+        return redirect(url_for('execute_run', run_id=run.id))
+    
+    current_assignments = {}
+    for assignment in run.assignments:
+        if assignment.test_case_id not in current_assignments:
+            current_assignments[assignment.test_case_id] = []
+        current_assignments[assignment.test_case_id].append(assignment.tester_id)
+         
+    potential_testers = User.query.filter(User.roles.any(Role.name.in_([ROLE_TESTER, ROLE_MANAGER]))).all()
+    
+    return render_template(
+        'run_form.html', 
+        project=project, 
+        run=run,
+        testers=potential_testers, 
+        current_assignments=current_assignments,
+        prio1=PRIORITY_HIGH, 
+        prio2=PRIORITY_NORMAL, 
+        prio3=PRIORITY_LOW
+    )
+
+# ROUTE: Update existing test run
+@app.route('/run/<int:run_id>/update', methods=['POST'])
+@login_required
+def update_run(run_id):
+    run = TestRun.query.get_or_404(run_id)
+    project = run.project
+
+    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
+        abort(403)
+        
+    if run.status != STATE_CREATED:
+        flash(f'Error: Test Plan must be in status "{STATE_CREATED}" for updating assignments.', 'error')
+        return redirect(url_for('execute_run', run_id=run.id))
+        
+    run.title = request.form.get('title')
+    run.start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date()
+    run.end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date()
+    
+    TestRunAssignment.query.filter_by(test_run_id=run.id).delete()
+    
+    for key in request.form:
+        if key.startswith('assign_case_'):
+            case_id = int(key.replace('assign_case_', ''))
+            tester_ids = request.form.getlist(key)
+            for tid in tester_ids:
+                assign = TestRunAssignment(test_run_id=run.id, test_case_id=case_id, tester_id=int(tid))
+                db.session.add(assign)
+    
+    db.session.commit()
+    flash('Test Plan updated and assignments modified.')
+    return redirect(url_for('execute_run', run_id=run.id))
+
 # ROUTE: Update state of test run, redirect to referrer
 @app.route('/run/<int:run_id>/status', methods=['POST'])
 @login_required
@@ -445,17 +512,44 @@ def update_run_status(run_id):
         abort(403)
     
     new_status = request.form.get('status')
-    if new_status in [STATE_ACTIVE, STATE_FINISHED, STATE_ABORTED]:
-        if new_status == STATE_FINISHED:
+
+    if new_status in [STATE_CREATED, STATE_ACTIVE, STATE_FINISHED, STATE_ABORTED]:
+        if new_status == STATE_ACTIVE and run.status == STATE_CREATED:
+            run.status = STATE_ACTIVE
+            db.session.commit()
+            flash(f'Test plan "{run.title}" activated.')
+            return redirect(request.referrer)
+
+        if new_status == STATE_CREATED and run.status == STATE_ACTIVE:
+            run.status = STATE_CREATED
+            db.session.commit()
+            flash(f'Test plan "{run.title}" reset to created state for adjustments.')
+            return redirect(request.referrer)
+            
+        if new_status == STATE_FINISHED and run.status == STATE_ACTIVE:
             all_assigns = TestRunAssignment.query.filter_by(test_run_id=run_id).all()
             for assignment in all_assigns:
                 if assignment.result == RESULT_NOT_TESTED:
                     flash("Error: Cannot close test plan because at least one test case is open.")
                     return redirect(url_for('execute_run', run_id=run_id))
 
-        run.status = new_status
-        db.session.commit()
-    
+            run.status = STATE_FINISHED
+            db.session.commit()
+            flash(f'Test plan "{run.title}" finished.')
+            return redirect(request.referrer)
+            
+        if new_status == STATE_ABORTED and run.status == STATE_ACTIVE:
+             run.status = STATE_ABORTED
+             db.session.commit()
+             flash(f'Test plan "{run.title}" aborted.')
+             return redirect(request.referrer)
+        
+        if new_status == STATE_ACTIVE and (run.status == STATE_ABORTED or run.status == STATE_FINISHED):
+            run.status = STATE_ACTIVE
+            db.session.commit()
+            flash(f'Test plan "{run.title}" restarted.')
+            return redirect(request.referrer)
+
     return redirect(request.referrer)
 
 # ROUTE: Start test run
@@ -507,6 +601,7 @@ def execute_run(run_id):
         state_active=STATE_ACTIVE, 
         state_aborted=STATE_ABORTED, 
         state_finished=STATE_FINISHED, 
+        state_created=STATE_CREATED,
         not_tested=RESULT_NOT_TESTED, 
         blocked=RESULT_BLOCKED, 
         failed=RESULT_FAILED,

@@ -2,6 +2,7 @@ from utils.database import db
 from datetime import date
 from model.run_assignment import TestRunAssignment, RESULT_OK, RESULT_BLOCKED, RESULT_FAILED, RESULT_NOT_TESTED
 
+STATE_CREATED = "created"
 STATE_ACTIVE = "active"
 STATE_FINISHED = "finished"
 STATE_ABORTED = "aborted"
@@ -12,12 +13,15 @@ class TestRun(db.Model):
     title = db.Column(db.String(150), nullable=False)
     start_date = db.Column(db.Date)
     end_date = db.Column(db.Date)
-    status = db.Column(db.String(20), default=STATE_ACTIVE)
+    status = db.Column(db.String(20), default=STATE_CREATED)
     assignments = db.relationship('TestRunAssignment', backref='test_run', cascade="all, delete-orphan")
     project = db.relationship('Project', backref='test_runs')
 
     def is_active(self):
         return self.status == STATE_ACTIVE
+    
+    def is_created(self):
+        return self.status == STATE_CREATED
     
     def calculate_statistics(self) -> dict:
         all_assigns = TestRunAssignment.query.filter_by(test_run_id=self.id).all()
