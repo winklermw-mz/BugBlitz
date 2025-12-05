@@ -32,12 +32,20 @@
                         <a href="{{ url_for('execute_run', run_id=id) }}" class="btn btn-sm btn-outline-primary position-absolute" style="top: 10px; right: 10px;">Open</a>
 
                         <h5 class="card-title pe-5">
-                            {{ run['run'].title }} <small><span class="badge bg-success">active</span></small>
+                            {{ run['run'].title }}<br>
+                            <small>
+                                {% if run['open_tests'] == 0 %}
+                                    <span class="badge bg-warning">ready for closing</span>
+                                {% endif %}
+
+                                {% if run['overdue'] %}
+                                    <span class="badge bg-danger">overdue</span>
+                                {% endif %}
+                            </small>
                         </h5>
 
                         <p class="text-muted small mb-2">
-                            My open tests: {{ run['open_tests'] }}<br>
-                            Due date: {{ run['run'].end_date }}
+                            Open tests: {{ run['open_tests'] }}<br>Due date: {{ run['run'].end_date }}
                         </p>
                     </div>
                 </div>

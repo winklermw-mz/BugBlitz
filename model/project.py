@@ -1,3 +1,4 @@
+from datetime import date
 from utils.database import db
 from model.run import STATE_ACTIVE
 from model.run_assignment import TestRunAssignment, RESULT_NOT_TESTED
@@ -14,16 +15,17 @@ class Project(db.Model):
         for run in self.test_runs:
             if run.status != STATE_ACTIVE:
                 continue
-            
+
             assignments = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
             open_tests = []
             for assignment in assignments:
                 if assignment.tester_id == user.id and assignment.result == RESULT_NOT_TESTED:
                     open_tests.append(assignment)
             
-            if open_tests:
+            if open_tests or user.is_test_manager():
                 my_runs[run.id] = {
                     "run": run, 
                     "open_tests": len(open_tests),
+                    "overdue": run.end_date < date.today(),
                 }
         return my_runs
