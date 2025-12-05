@@ -4,7 +4,7 @@
     <h2 class="m-0">🤖 Generate Test Cases from Requirement</h2>
     
     <div class="d-flex gap-2">
-        <button form="aiCaseForm" type="submit" class="btn btn-primary">
+        <button type="button" class="btn btn-primary" onclick="submitFormAndShowModal()">
             <i class="fas fa-magic"></i> Generate Test Cases
         </button>
         <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
@@ -22,11 +22,41 @@
     </div>
     
     <div class="d-flex gap-2 mb-3">
-        <button type="submit" class="btn btn-primary">
+        <button type="button" class="btn btn-primary" onclick="submitFormAndShowModal()">
             <i class="fas fa-magic"></i> Generate Test Cases
         </button>
         <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
     </div>
-    </form>
+</form>
+
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Generating Test Cases...</p>
+        <small class="text-muted">This may take up to 30 seconds.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    function submitFormAndShowModal() {
+        const form = document.getElementById('aiCaseForm');
+        const requirementText = document.getElementById('requirement').value.trim();
+
+        if (requirementText.length === 0) {
+            alert("Please enter a requirement before extracting test cases.");
+            return; 
+        }
+
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        loadingModal.show();
+        form.submit();
+    }
+</script>
 
 {% endblock %}
