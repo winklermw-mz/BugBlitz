@@ -4,12 +4,12 @@
     <h2 class="m-0">🤖 Generate Test Cases from Requirement</h2>
     
     <div class="d-flex gap-2">
-        <button type="button" class="btn btn-primary" onclick="submitFormAndShowModal()">
+        <button type="button" class="btn btn-primary" onclick="submitFormAndShowModal()" id="generateBtn">
             <i class="fas fa-magic"></i> Generate Test Cases
         </button>
         <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
     </div>
-    </div>
+</div>
 
 <div class="alert alert-info" role="alert">
     Enter your requirement in the text field below. An external AI model will attempt to generate one or more structured test cases based on your input.
@@ -18,18 +18,12 @@
 <form method="POST" action="{{ url_for('extract_case_ai', project_id=project.id) }}" id="aiCaseForm">
     <div class="mb-3">
         <label for="requirement" class="form-label">Requirement (Plaintext)</label>
-        <textarea name="requirement" id="requirement" class="form-control" rows="10" required placeholder="Example: The user must be able to log in to the system using their username and password. If the login is successful, they are redirected to the dashboard. If the login fails due to incorrect credentials, an error message must be displayed."></textarea>
-    </div>
-    
-    <div class="d-flex gap-2 mb-3">
-        <button type="button" class="btn btn-primary" onclick="submitFormAndShowModal()">
-            <i class="fas fa-magic"></i> Generate Test Cases
-        </button>
-        <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
+        <textarea name="requirement" id="requirement" class="form-control" rows="10" required
+            placeholder="Example: The user must be able to log in..."></textarea>
     </div>
 </form>
 
-<div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-body text-center">
@@ -47,14 +41,18 @@
     function submitFormAndShowModal() {
         const form = document.getElementById('aiCaseForm');
         const requirementText = document.getElementById('requirement').value.trim();
+        const btn = document.getElementById('generateBtn');
 
         if (requirementText.length === 0) {
             alert("Please enter a requirement before extracting test cases.");
-            return; 
+            return;
         }
+
+        btn.disabled = true;
 
         const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
         loadingModal.show();
+        
         form.submit();
     }
 </script>

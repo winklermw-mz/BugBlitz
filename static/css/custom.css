@@ -1,3 +1,6 @@
 .bg-opaque {
     opacity: 0.6;
 }
+.modal-backdrop.show {
+    opacity: 0.7 !important;
+}
