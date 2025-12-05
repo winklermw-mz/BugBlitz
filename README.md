@@ -1,6 +1,6 @@
-# 🐞 BugBench - Test Management System
+# 🐞 BugBlitz - Test Management System
 
-BugBench is a lightweight, role-based web application for managing test projects, test cases, and test runs. Built with Flask and SQLAlchemy, it provides a streamlined interface for defining test specifications and documenting execution results.
+BugBlitz is a lightweight, role-based web application for managing test projects, test cases, and test runs. Built with Flask and SQLAlchemy, it provides a streamlined interface for defining test specifications and documenting execution results.
 
 ## Features
 
@@ -69,4 +69,4 @@ Upon the first startup, the application creates a default administrative user:
 
 ## Contributing
 
-BugBench is intended as a feature-rich prototype. Feel free to extend its functionality, integrate advanced reporting, or enhance the user interface!
+BugBlitz is intended as a feature-rich prototype. Feel free to extend its functionality, integrate advanced reporting, or enhance the user interface!

@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dein-geheimer-schluessel-hier'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bugbench.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bugblitz.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = setup_database(app)
