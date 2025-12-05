@@ -336,7 +336,14 @@ def create_run(project_id):
         return redirect(url_for('view_project', project_id=project.id))
 
     potential_testers = User.query.filter(User.roles.any(Role.name.in_([ROLE_TESTER, ROLE_MANAGER, ROLE_ADMIN]))).all()
-    return render_template('run_form.html', project=project, testers=potential_testers)
+    return render_template(
+        'run_form.html', 
+        project=project, 
+        testers=potential_testers, 
+        prio1=PRIORITY_HIGH, 
+        prio2=PRIORITY_NORMAL, 
+        prio3=PRIORITY_LOW
+    )
 
 # ROUTE: Update state of test run, redirect to referrer
 @app.route('/run/<int:run_id>/status', methods=['POST'])
@@ -417,4 +424,4 @@ def execute_run(run_id):
 
 if __name__ == '__main__':
     create_initial_data(app)
-    app.run(host="0.0.0.0", port=8100, debug=False)
+    app.run(host="0.0.0.0", port=8100, debug=True)

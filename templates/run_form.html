@@ -62,7 +62,7 @@
                 <th width="5%">
                     <input type="checkbox" id="select_all_cases">
                 </th>
-                <th width="35%">Test Case</th>
+                <th width="60%">Test Case</th>
                 <th>Assigned Testers</th>
             </tr>
         </thead>
@@ -75,8 +75,19 @@
                 </td>
                 <td>
                     <strong>{{ case.title }}</strong><br>
+                    {% if case.priority == prio1 %}
+                    <span class="badge bg-danger bg-opaque">{{ case.priority }}</span>
+                    {% endif %}
+
+                    {% if case.priority == prio2 %}
+                    <span class="badge bg-warning bg-opaque">{{ case.priority }}</span>
+                    {% endif %}
+
+                    {% if case.priority == prio3 %}
+                    <span class="badge bg-info bg-opaque">{{ case.priority }}</span>
+                    {% endif %}
                     {% for tag in case.tags %}
-                    <span class="badge bg-light text-dark">{{ tag.name }}</span>
+                    <span class="badge bg-light text-dark bg-opaque">{{ tag.name }}</span>
                     {% endfor %}
                 </td>
                 <td>
