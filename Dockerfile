@@ -1,5 +1,9 @@
 FROM python:3.12-slim
 
+ENV LLM_HOST="http://host.docker.internal:1234/v1"
+ENV LLM_API_KEY="lm-studio"
+ENV LLM_MODEL="qwen/qwen3-vl-4b"
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

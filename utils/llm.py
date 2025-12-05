@@ -3,10 +3,10 @@ import json
 from model.case import PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 
 
-def call_ai_model(host: str, api_key:str, requirement: str) -> list:
+def call_ai_model(requirement: str, host: str, api_key:str, model: str) -> list:
     client = OpenAI(base_url=host, api_key=api_key)
     response = client.chat.completions.create(
-        model="qwen/qwen3-vl-4b",
+        model=model,
         messages=[
             {
                 "role": "system",

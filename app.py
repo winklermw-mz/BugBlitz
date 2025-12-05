@@ -1,3 +1,4 @@
+import os
 from utils.database import setup_database, setup_login_manager
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, flash, request, abort, jsonify
@@ -11,6 +12,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = setup_database(app)
 login_manager = setup_login_manager(app)
+
+LLM_HOST = os.getenv("LLM_HOST", "http://localhost:1234/v1")
+LLM_API_KEY = os.getenv("LLM_API_KEY", "lm-studio")
+LLM_MODEL = os.getenv("LLM_MODEL", "qwen/qwen3-vl-4b")
 
 from model.user import User, USER_ADMIN
 from model.role import Role, ROLE_ADMIN, ROLE_MANAGER, ROLE_TESTER
@@ -335,7 +340,11 @@ def extract_case_ai(project_id):
         flash('Error: Requirement text is empty.', 'error')
         return redirect(url_for('create_case_ai_form', project_id=project.id))
 
-    generated_cases_data = call_ai_model("http://localhost:1234/v1", "lm-studio", requirement_text)
+    try:
+        generated_cases_data = call_ai_model(requirement_text, LLM_HOST, LLM_API_KEY, LLM_MODEL)
+    except Exception as e:
+        flash(f"Error: AI model returned an invalid response: {e}", "error")
+        return redirect(url_for('create_case_ai_form', project_id=project.id))
     
     if generated_cases_data is None:
         flash('Error: Could not connect to AI model.', 'error')
