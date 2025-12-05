@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="m-0">🤖 Generate Test Cases from Requirement</h2>
+    
+    <div class="d-flex gap-2">
+        <button form="aiCaseForm" type="submit" class="btn btn-primary">
+            <i class="fas fa-magic"></i> Generate Test Cases
+        </button>
+        <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
+    </div>
+    </div>
+
+<div class="alert alert-info" role="alert">
+    Enter your requirement in the text field below. An external AI model will attempt to generate one or more structured test cases based on your input.
+</div>
+
+<form method="POST" action="{{ url_for('extract_case_ai', project_id=project.id) }}" id="aiCaseForm">
+    <div class="mb-3">
+        <label for="requirement" class="form-label">Requirement (Plaintext)</label>
+        <textarea name="requirement" id="requirement" class="form-control" rows="10" required placeholder="Example: The user must be able to log in to the system using their username and password. If the login is successful, they are redirected to the dashboard. If the login fails due to incorrect credentials, an error message must be displayed."></textarea>
+    </div>
+    
+    <div class="d-flex gap-2 mb-3">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-magic"></i> Generate Test Cases
+        </button>
+        <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
+    </div>
+    </form>
+
+{% endblock %}

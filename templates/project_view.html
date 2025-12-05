@@ -29,9 +29,10 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Test Cases</span>
-                <input type="text" id="caseSearch" class="form-control form-control-sm w-50" placeholder="Search test cases..." onkeyup="filterCases()">
+                <input type="text" id="caseSearch" class="form-control form-control-sm w-75" placeholder="Search test cases..." onkeyup="filterCases()">
                 {% if current_user.id == project.owner_id %}
                 <a href="{{ url_for('manage_case', project_id=project.id) }}" class="btn btn-sm btn-primary ms-2">+ New Test Case</a>
+                <a href="{{ url_for('create_case_ai_form', project_id=project.id) }}" class="btn btn-sm btn-primary ms-2">AI Wizard</a>
                 {% endif %}
             </div>
 
