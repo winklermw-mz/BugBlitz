@@ -22,15 +22,32 @@
 </div>
 
 <div class="card mb-4">
-    <div class="card-body d-flex justify-content-around text-center">
-        <div><strong>Total</strong><h3>{{ stats['total'] }}</h3></div>
-        <div><strong>Percentage</strong><h3>{{ stats['percentage'] }}%</h3></div>
-        <div class="text-success"><strong>OK</strong><h3>{{ stats[ok] }}</h3></div>
-        <div class="text-danger"><strong>Failed</strong><h3>{{ stats[failed] }}</h3></div>
-        <div class="text-warning"><strong>Blocked</strong><h3>{{ stats[blocked] }}</h3></div>
-        <div class="text-muted"><strong>Not Tested</strong><h3>{{ stats[not_tested] }}</h3></div>
+    <div class="card-body">
+        <div class="progress" style="height: 30px;">
+            <div class="progress-bar bg-success" role="progressbar"
+                 style="width: {{ stats[ok] / stats['total'] * 100 }}%">
+                OK ({{ stats[ok] }})
+            </div>
+            <div class="progress-bar bg-danger" role="progressbar"
+                 style="width: {{ stats[failed] / stats['total'] * 100 }}%">
+                Failed ({{ stats[failed] }})
+            </div>
+            <div class="progress-bar bg-warning" role="progressbar"
+                 style="width: {{ stats[blocked] / stats['total'] * 100 }}%">
+                Blocked ({{ stats[blocked] }})
+            </div>
+            <div class="progress-bar bg-secondary text-dark" role="progressbar"
+                 style="width: {{ stats[not_tested] / stats['total'] * 100 }}%">
+                Not Tested ({{ stats[not_tested] }})
+            </div>
+        </div>
+
+        <div class="mt-3 text-center">
+            <strong>Completion: </strong> {{ stats[ok] + stats[failed] + stats[blocked] }} of {{ stats['total'] }} test cases ({{ stats['percentage'] }}%)
+        </div>
     </div>
 </div>
+
 
 <div class="accordion" id="accordionCases">
     {% for assign in assignments %}
