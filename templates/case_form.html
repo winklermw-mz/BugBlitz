@@ -33,7 +33,7 @@
             {% for t in all_tags %}<option value="{{ t }}">{% endfor %}
         </datalist>
     </div>
-    <div class="mb-3"><label>Summary</label><input type="text" name="summary" class="form-control" value="{{ case.summary or '' }}"></div>
+    <div class="mb-3"><label>Summary</label><textarea name="summary" class="form-control">{{ case.summary or '' }}</textarea></div>
     <div class="row">
         <div class="col-md-6 mb-3"><label>Preconditions</label><textarea name="precondition" class="form-control">{{ case.precondition or '' }}</textarea></div>
         <div class="col-md-6 mb-3"><label>Postconditions</label><textarea name="postcondition" class="form-control">{{ case.postcondition or '' }}</textarea></div>

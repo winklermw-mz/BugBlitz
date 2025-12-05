@@ -75,7 +75,7 @@
                                                 <option value="{{ ok }}" {% if step_res and step_res.status == ok %}selected{% endif %}>OK</option>
                                                 <option value="{{ failed }}" {% if step_res and step_res.status == failed %}selected{% endif %}>Fail</option>
                                             </select>
-                                            <input type="text" name="step_comment_{{ step.step_number }}" class="form-control form-control-sm" placeholder="Comment" value="{{ step_res.comment if step_res else '' }}">
+                                            <textarea name="step_comment_{{ step.step_number }}" class="form-control form-control-sm" placeholder="Comment">{{ step_res.comment if step_res else '' }}</textarea>
                                             {% else %}
                                                 {% if step_res %}
                                                     <span class="badge me-2 
@@ -97,7 +97,7 @@
                     <div class="bg-light p-3 rounded">
                         <label class="form-label fw-bold">Result of test case</label>
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-2">
                                 <select name="status" class="form-select">
                                     <option value="{{ ok }}" {% if assign.result == ok %}selected{% endif %}>OK</option>
                                     <option value="{{ failed }}" {% if assign.result == failed %}selected{% endif %}>Failed</option>
@@ -105,8 +105,8 @@
                                     <option value="{{ not_tested }}" {% if assign.result == not_tested %}selected{% endif %}>Not tested</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <input type="text" name="comment" class="form-control" placeholder="Comment" value="{{ assign.comment or '' }}">
+                            <div class="col-md-8">
+                                <textarea name="comment" class="form-control" placeholder="Comment">{{ assign.comment or '' }}</textarea>
                             </div>
                             <div class="col-md-2">
                                 <button type="submit" class="btn btn-primary w-100">Save</button>
