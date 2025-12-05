@@ -32,16 +32,20 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def dashboard():
+    all_projects = Project.query.all()
+    my_runs = {}
+
+    for project in all_projects:
+        my_runs |= project.get_open_runs(current_user)
+
     if current_user.is_admin():
-        projects = Project.query.all()
-        return render_template('dashboard.html', all_projects=projects)
+        return render_template('dashboard.html', my_projects=all_projects, my_runs=my_runs)
     
     if current_user.is_test_manager():
         my_projects = Project.query.filter_by(owner_id=current_user.id).all()
-        return render_template('dashboard.html', my_projects=my_projects)
-    
-    projects = Project.query.all()
-    return render_template('dashboard.html', all_projects=projects)
+        return render_template('dashboard.html', my_projects=my_projects, my_runs=my_runs)
+
+    return render_template('dashboard.html', my_runs=my_runs)
 
 # ROUTE: Login form, redirected to dashboard
 @app.route('/login', methods=['GET', 'POST'])
@@ -335,7 +339,7 @@ def create_run(project_id):
         db.session.commit()
         return redirect(url_for('view_project', project_id=project.id))
 
-    potential_testers = User.query.filter(User.roles.any(Role.name.in_([ROLE_TESTER, ROLE_MANAGER, ROLE_ADMIN]))).all()
+    potential_testers = User.query.filter(User.roles.any(Role.name.in_([ROLE_TESTER, ROLE_MANAGER]))).all()
     return render_template(
         'run_form.html', 
         project=project, 

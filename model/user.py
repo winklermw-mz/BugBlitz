@@ -1,5 +1,5 @@
 from utils.database import db
-from model.role import ROLE_MANAGER
+from model.role import ROLE_MANAGER, ROLE_TESTER
 from flask_login import UserMixin
 
 USER_ADMIN = "admin"
@@ -25,3 +25,6 @@ class User(UserMixin, db.Model):
 
     def is_test_manager(self):
         return self.has_role(ROLE_MANAGER)
+    
+    def is_tester(self):
+        return self.has_role(ROLE_TESTER)
