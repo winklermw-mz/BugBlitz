@@ -100,11 +100,14 @@
                             {% if run.status == active %}
                                 <small><span class="badge bg-success">{{ run.status }}</span></small>
                             {% endif %}
-                            {% if run.status == finished %}
+                            {% if run.status == finished or run.status == aborted %}
                                 <small><span class="badge bg-secondary">{{ run.status }}</span></small>
                             {% endif %}
-                            {% if run.status == aborted %}
-                                <small><span class="badge bg-danger">{{ run.status }}</span></small>
+                            {% if statistics[run.id]['overdue'] %}
+                                <small><span class="badge bg-warning">overdue</span></small>
+                            {% endif %}
+                            {% if statistics[run.id][not_tested] == 0 and run.status == active %}
+                                <small><span class="badge bg-warning">ready for closing</span></small>
                             {% endif %}
                         </h5>
 

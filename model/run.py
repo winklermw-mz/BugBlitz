@@ -1,4 +1,5 @@
 from utils.database import db
+from datetime import date
 from model.run_assignment import TestRunAssignment, RESULT_OK, RESULT_BLOCKED, RESULT_FAILED, RESULT_NOT_TESTED
 
 STATE_ACTIVE = "active"
@@ -24,6 +25,7 @@ class TestRun(db.Model):
         stats = {
             "total": count, 
             "percentage": 0,
+            "overdue": self.status == STATE_ACTIVE and self.end_date < date.today(),
             RESULT_OK: 0,
             RESULT_FAILED: 0, 
             RESULT_BLOCKED: 0, 
