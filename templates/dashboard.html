@@ -34,8 +34,8 @@
                         <h5 class="card-title pe-5">
                             {{ run['run'].title }}<br>
                             <small>
-                                {% if run['open_tests'] == 0 %}
-                                    <span class="badge bg-warning">ready for closing</span>
+                                {% if run['open_tests'] == 0 and run['state'] == state_active %}
+                                    < span class="badge bg-warning">ready for closing</span>
                                 {% endif %}
 
                                 {% if run['overdue'] %}
