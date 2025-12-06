@@ -38,11 +38,14 @@
     </p>
 
     <div class="card p-3 mb-3">
-        <h5>Assign testers to selected test cases</h5>
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="m-0">Available Testers</h5>
+            <button type="button" class="btn btn-sm btn-primary px-2 py-1" onclick="applyTesters()">Apply selection</button>
+        </div>
 
         <div class="row">
             {% for t in testers %}
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="form-check">
                     <input class="form-check-input global-tester"
                            type="checkbox"
@@ -55,10 +58,6 @@
             </div>
             {% endfor %}
         </div>
-
-        <button type="button" class="btn btn-sm btn-primary mt-2" onclick="applyTesters()">
-            Apply to selected cases
-        </button>
     </div>
 
     <table class="table table-bordered">
