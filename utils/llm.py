@@ -1,6 +1,6 @@
 import json
 from openai import OpenAI
-from model.case import PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
+from model.testcase import PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 
 
 def call_ai_model(requirement: str, host: str, api_key:str, model: str) -> list:

@@ -1,10 +1,10 @@
 from utils.database import db
 from flask import redirect, url_for, abort, request, render_template, flash
 from flask_login import current_user
-from model.case import TestCase, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
+from model.testcase import TestCase, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 from model.tag import Tag
 from model.project import Project
-from model.case import TestCase, PRIORITY_NORMAL
+from model.testcase import TestCase, PRIORITY_NORMAL
 from model.step import TestStep
 from utils.llm import call_ai_model
 
@@ -42,8 +42,7 @@ def route_testcase_edit(project_id: int, case_id: int|None = None):
                 db.session.add(tag)
             case.tags.append(tag)
 
-        db.session.add(case)
-        db.session.commit()
+        case.store()
         
         TestStep.query.filter_by(test_case_id=case.id).delete()
         actions = request.form.getlist('action[]')
@@ -154,8 +153,7 @@ def route_testcase_ai_gen(project_id: int, host: str, key: str, model: str):
             tag = Tag.query.filter_by(name=my_tag).first()
             if not tag:
                 tag = Tag(name=my_tag)
-                db.session.add(tag)
-                db.session.commit()
+                tag.store()
             tags.append(tag)
             
         new_case = TestCase(
@@ -169,8 +167,7 @@ def route_testcase_ai_gen(project_id: int, host: str, key: str, model: str):
             source=case_data.get('source'),
             tags=tags
         )
-        db.session.add(new_case)
-        db.session.commit()
+        new_case.store()
         
         steps_data = case_data.get('steps', [])
         for idx, step_data in enumerate(steps_data):

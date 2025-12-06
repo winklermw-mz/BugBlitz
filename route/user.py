@@ -12,21 +12,21 @@ def route_user_administration():
     
     if request.method == 'POST':
         if 'create' in request.form:
-            uname = str(request.form.get('username'))
+            username = str(request.form.get('username'))
             pwd = str(request.form.get('password'))
             pwd2 = str(request.form.get('password_repeat'))
             email = str(request.form.get('email'))
-            selected_roles = request.form.getlist('roles')
+            roles = request.form.getlist('roles')
             
             if pwd != pwd2:
                 flash('Error: Passwords do not match.')
                 return redirect(url_for('admin_users'))
 
-            if User.query.filter_by(username=uname).first():
+            if User.query.filter_by(username=username).first():
                 flash('Error: User already exists.')
             else:
-                user = User(uname, email, pwd)
-                user.set_roles(selected_roles)
+                user = User(username, email, pwd)
+                user.set_roles(roles)
                 user.store()
                 flash(f"User '{user.username}' successfully created.")
         
@@ -63,7 +63,6 @@ def route_user_edit(user_id: int):
 
         user.username = username
         user.email = email
-
         user.roles = []
         for role_name in roles:
             r = Role.query.filter_by(name=role_name).first()

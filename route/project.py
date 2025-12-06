@@ -1,8 +1,7 @@
-from utils.database import db
 from flask import render_template, redirect, url_for, request, abort, flash
 from flask_login import current_user
 from model.project import Project, STATE_ABORTED, STATE_ACTIVE, STATE_CREATED, STATE_FINISHED
-from model.case import TestCase, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
+from model.testcase import TestCase, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 from model.run_assignment import RESULT_BLOCKED, RESULT_FAILED, RESULT_NOT_TESTED, RESULT_OK
 
 # ROUTE: New project
@@ -16,8 +15,7 @@ def route_project_create():
             description=str(request.form.get('description')), 
             owner_id=current_user.id
         )
-        db.session.add(project)
-        db.session.commit()
+        project.store()
         return redirect(url_for('dashboard'))
     
     return render_template('project_form.html', project=None)

@@ -1,4 +1,3 @@
-from datetime import date
 from utils.database import db
 from model.run import STATE_FINISHED, STATE_ABORTED, STATE_ACTIVE, STATE_CREATED
 from model.run_assignment import TestRunAssignment, RESULT_NOT_TESTED
@@ -54,4 +53,8 @@ class Project(db.Model):
             db.session.delete(case)
 
         db.session.delete(self)
+        db.session.commit()
+
+    def store(self):
+        db.session.add(self)
         db.session.commit()

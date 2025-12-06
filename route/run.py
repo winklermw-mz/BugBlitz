@@ -2,7 +2,7 @@ from utils.database import db
 from flask import redirect, url_for, abort, render_template, flash, request
 from flask_login import current_user
 from datetime import datetime
-from model.case import PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
+from model.testcase import PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 from model.project import STATE_ABORTED, STATE_ACTIVE, STATE_CREATED, STATE_FINISHED
 from model.run import TestRun
 from model.role import Role, ROLE_TESTER, ROLE_MANAGER
@@ -88,8 +88,7 @@ def route_run_create(project_id: int):
             start_date=datetime.strptime(str(request.form.get('start_date')), '%Y-%m-%d').date(),
             end_date=datetime.strptime(str(request.form.get('end_date')), '%Y-%m-%d').date()
         )
-        db.session.add(run)
-        db.session.commit()
+        run.store()
         
         for key in request.form:
             if key.startswith('assign_case_'):
@@ -126,14 +125,12 @@ def route_run_update_state(run_id: int):
 
     if new_status in [STATE_CREATED, STATE_ACTIVE, STATE_FINISHED, STATE_ABORTED]:
         if new_status == STATE_ACTIVE and run.status == STATE_CREATED:
-            run.status = STATE_ACTIVE
-            db.session.commit()
+            run.set_status(STATE_ACTIVE)
             flash(f'Test plan "{run.title}" activated.')
             return redirect(request.referrer)
 
         if new_status == STATE_CREATED and run.status == STATE_ACTIVE:
-            run.status = STATE_CREATED
-            db.session.commit()
+            run.set_status(STATE_CREATED)
             flash(f'Test plan "{run.title}" reset to created state for adjustments.')
             return redirect(request.referrer)
             
@@ -144,20 +141,17 @@ def route_run_update_state(run_id: int):
                     flash("Error: Cannot close test plan because at least one test case is open.")
                     return redirect(url_for('execute_run', run_id=run_id))
 
-            run.status = STATE_FINISHED
-            db.session.commit()
+            run.set_status(STATE_FINISHED)
             flash(f'Test plan "{run.title}" finished.')
             return redirect(request.referrer)
             
         if new_status == STATE_ABORTED and run.status == STATE_ACTIVE:
-             run.status = STATE_ABORTED
-             db.session.commit()
-             flash(f'Test plan "{run.title}" aborted.')
-             return redirect(request.referrer)
+            run.set_status(STATE_ABORTED)
+            flash(f'Test plan "{run.title}" aborted.')
+            return redirect(request.referrer)
         
         if new_status == STATE_ACTIVE and (run.status == STATE_ABORTED or run.status == STATE_FINISHED):
-            run.status = STATE_ACTIVE
-            db.session.commit()
+            run.set_status(STATE_ACTIVE)
             flash(f'Test plan "{run.title}" restarted.')
             return redirect(request.referrer)
 

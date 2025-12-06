@@ -6,3 +6,7 @@ class Tag(db.Model):
 
     def __init__(self, name: str):
         self.name = name
+    
+    def store(self):
+        db.session.add(self)
+        db.session.commit()

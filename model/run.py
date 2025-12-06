@@ -50,3 +50,11 @@ class TestRun(db.Model):
             else: stats[RESULT_NOT_TESTED] += 1
         stats["percentage"] = 0 if count == 0 else int(round(100 * (count - stats[RESULT_NOT_TESTED]) / count, 0))
         return stats
+
+    def store(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def set_store(self, status):
+        self.status = status
+        db.session.commit()

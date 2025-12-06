@@ -53,3 +53,7 @@ class TestCase(db.Model):
 
         db.session.delete(self)
         db.session.commit()
+    
+    def store(self):
+        db.session.add(self)
+        db.session.commit()
