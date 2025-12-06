@@ -209,14 +209,14 @@
     {% endif %}
     
     {% if run.status == state_active %}
-        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to close the test plan? All test cases must be completed.');">
+        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
             <input type="hidden" name="status" value="{{ state_finished }}">
             <button type="submit" class="btn btn-primary">Finish</button>
         </form>
     {% endif %}
 
     {% if run.status == state_active %}
-        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to abort the test plan?');">
+        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to abort the test plan? Further testing will not be possible.');">
             <input type="hidden" name="status" value="{{ state_aborted }}">
             <button type="submit" class="btn btn-danger">Abort</button>
         </form>
