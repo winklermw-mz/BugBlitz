@@ -20,6 +20,7 @@ Users can be assigned multiple roles, allowing for complex permission structures
 - Hashtags: Support for defining descriptive tags (hashtags) per test case. New tags can be created on-the-fly, and existing ones can be selected via autocomplete.
 - Manual Ordering: Test cases within a Project can be manually sorted using up/down buttons for defining a logical execution sequence, overriding standard sorting.
 - Step Management: Test steps can be easily added, deleted, and reordered (up/down movement) within the test case definition.
+- AI Assistent Creation: Test Cases can automatically be derived from provided requirements using a LLM service.
 
 ### Test Run & Assignment
 
@@ -53,7 +54,13 @@ Users can be assigned multiple roles, allowing for complex permission structures
     ```bash
     pip install -r requirements.txt
     ```
-4.  Run the Application:
+4. Set the following environment variables if the AI service is used. Modify these default values if necessary.
+    ```bash
+    export LLM_HOST=http://localhost:1234/v1
+    export LLM_API_KEY=lm-studio
+    export LLM_MODEL=qwen/qwen3-vl-4b
+    ```
+5.  Run the Application:
     ```bash
     python app.py
     ```
