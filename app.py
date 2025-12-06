@@ -119,8 +119,10 @@ def admin_users():
                 db.session.commit()
                 flash('User successfully created.')
         elif 'delete' in request.form:
-            User.query.filter_by(id=request.form.get('user_id')).delete()
-            db.session.commit()
+            user: User = User.query.get(str(request.form.get('user_id')))
+            username = user.username
+            user.delete()
+            flash(f"Deleted user '{username}'")
             
     users = User.query.all()
     all_roles = Role.query.all()
@@ -172,12 +174,12 @@ def create_project():
         abort(403)
 
     if request.method == 'POST':
-        proj = Project(
+        project = Project(
             title=str(request.form.get('title')), 
             description=str(request.form.get('description')), 
             owner_id=current_user.id
         )
-        db.session.add(proj)
+        db.session.add(project)
         db.session.commit()
         return redirect(url_for('dashboard'))
     
@@ -187,13 +189,12 @@ def create_project():
 @app.route('/project/<int:project_id>/delete', methods=['POST'])
 @login_required
 def delete_project(project_id):
-    proj = Project.query.get_or_404(project_id)
-    if not (current_user.is_admin() or (current_user.is_test_manager() and proj.owner_id == current_user.id)): 
+    project = Project.query.get_or_404(project_id)
+    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
         abort(403)
-
-    db.session.delete(proj)
-    db.session.commit()
-    flash('Project deleted.')
+    
+    project.delete()
+    flash('Project successfully deleted.')
     return redirect(url_for('dashboard'))
 
 # ROUTE: Modify project
@@ -289,15 +290,13 @@ def manage_case(project_id, case_id=None):
 @app.route('/case/<int:case_id>/delete', methods=['POST'])
 @login_required
 def delete_case(case_id):
-    case = TestCase.query.get_or_404(case_id)
+    case: TestCase = TestCase.query.get_or_404(case_id)
     if not (current_user.is_admin() or (current_user.is_test_manager() and case.project.owner_id == current_user.id)): 
         abort(403)
 
-    for assignment in case.assignments:
-        db.session.delete(assignment)
-
-    db.session.delete(case)
-    db.session.commit()
+    title = case.title
+    case.delete()
+    flash(f"Deleted test case '{title}'")
     return redirect(url_for('view_project', project_id=case.project_id))
 
 # ROUTE: Sort test cases

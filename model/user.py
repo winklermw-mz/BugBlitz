@@ -1,6 +1,8 @@
 from utils.database import db
 from model.role import ROLE_MANAGER, ROLE_TESTER
 from flask_login import UserMixin
+from model.run_assignment import TestRunAssignment
+from model.project import Project
 
 USER_ADMIN = "admin"
 
@@ -33,3 +35,15 @@ class User(UserMixin, db.Model):
     
     def is_tester(self):
         return self.has_role(ROLE_TESTER)
+    
+    def delete(self):
+        assignments = TestRunAssignment.query.filter_by(tester_id=self.id).all()
+        for assignment in assignments:
+            db.session.delete(assignment)
+        
+        projects = Project.query.filter_by(owner_id=self.id).all()
+        for project in projects:
+            project.delete()
+        
+        db.session.delete(self)
+        db.session.commit()

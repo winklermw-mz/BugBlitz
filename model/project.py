@@ -38,3 +38,20 @@ class Project(db.Model):
                     "state": run.status,
                 }
         return my_runs
+
+    def delete(self):
+        run_ids = [run.id for run in self.test_runs]
+    
+        if run_ids:
+            assignments = TestRunAssignment.query.filter(TestRunAssignment.test_run_id.in_(run_ids)).all()
+            for assignment in assignments:
+                db.session.delete(assignment)
+
+        for run in self.test_runs.copy():
+            db.session.delete(run)
+
+        for case in self.test_cases.copy():
+            db.session.delete(case)
+
+        db.session.delete(self)
+        db.session.commit()

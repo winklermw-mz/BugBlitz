@@ -46,3 +46,10 @@ class TestCase(db.Model):
         self.priority = priority
         self.source = source
         self.tags = tags
+
+    def delete(self):
+        for assignment in self.assignments:
+            db.session.delete(assignment)
+
+        db.session.delete(self)
+        db.session.commit()
