@@ -17,6 +17,7 @@ COPY model /app/model
 COPY static /app/static
 COPY templates /app/templates
 COPY utils /app/utils
+COPY route /app/route
 COPY app.py /app/app.py
 
 EXPOSE 8100
