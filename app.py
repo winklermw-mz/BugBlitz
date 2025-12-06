@@ -69,7 +69,7 @@ def dashboard():
 def login():
     if request.method == 'POST':
         user = User.query.filter_by(username=request.form.get('username')).first()
-        if user and check_password_hash(user.password_hash, request.form.get('password')):
+        if user and check_password_hash(user.password_hash, str(request.form.get('password'))):
             login_user(user)
             return redirect(url_for('dashboard'))
         
@@ -92,10 +92,10 @@ def admin_users():
     
     if request.method == 'POST':
         if 'create' in request.form:
-            uname = request.form.get('username')
-            pwd = request.form.get('password')
-            pwd2 = request.form.get('password_repeat')
-            email = request.form.get('email')
+            uname = str(request.form.get('username'))
+            pwd = str(request.form.get('password'))
+            pwd2 = str(request.form.get('password_repeat'))
+            email = str(request.form.get('email'))
             selected_roles = request.form.getlist('roles')
             
             if pwd != pwd2:
@@ -137,11 +137,11 @@ def edit_user(user_id):
     all_roles = Role.query.all()
 
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
+        username = str(request.form.get('username'))
+        email = str(request.form.get('email'))
         roles = request.form.getlist('roles')
-        pwd = request.form.get('password')
-        pwd2 = request.form.get('password_repeat')
+        pwd = str(request.form.get('password'))
+        pwd2 = str(request.form.get('password_repeat'))
 
         if pwd or pwd2:
             if pwd != pwd2:
@@ -172,7 +172,11 @@ def create_project():
         abort(403)
 
     if request.method == 'POST':
-        proj = Project(title=request.form.get('title'), description=request.form.get('description'), owner_id=current_user.id)
+        proj = Project(
+            title=str(request.form.get('title')), 
+            description=str(request.form.get('description')), 
+            owner_id=current_user.id
+        )
         db.session.add(proj)
         db.session.commit()
         return redirect(url_for('dashboard'))
@@ -231,21 +235,20 @@ def manage_case(project_id, case_id=None):
         abort(403)
 
     if case_id:
-        case = TestCase.query.get(case_id)
+        case: TestCase = TestCase.query.get(case_id)
     else:
-        case = TestCase(project_id=project.id)
+        case: TestCase = TestCase(project_id=project.id)
         max_seq = db.session.query(db.func.max(TestCase.sequence)).filter_by(project_id=project.id).scalar()
         case.sequence = (max_seq or 0) + 1
 
-
     if request.method == 'POST':
         case.sequence = int(request.form.get('sequence', 0))
-        case.title = request.form.get('title')
-        case.summary = request.form.get('summary')
-        case.precondition = request.form.get('precondition')
-        case.postcondition = request.form.get('postcondition')
-        case.priority = request.form.get('priority')
-        case.source = request.form.get('source')
+        case.title = str(request.form.get('title'))
+        case.summary = str(request.form.get('summary'))
+        case.precondition = str(request.form.get('precondition'))
+        case.postcondition = str(request.form.get('postcondition'))
+        case.priority = str(request.form.get('priority'))
+        case.source = str(request.form.get('source'))
         
         tag_names = [t.strip() for t in request.form.get('tags', '').split(' ') if t.strip()]
         case.tags = []
@@ -416,13 +419,13 @@ def create_run(project_id):
     project = Project.query.get_or_404(project_id)
     if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
         abort(403)
-         
+        
     if request.method == 'POST':
         run = TestRun(
             project_id=project.id, 
-            title=request.form.get('title'),
-            start_date=datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date(),
-            end_date=datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date()
+            title=str(request.form.get('title')),
+            start_date=datetime.strptime(str(request.form.get('start_date')), '%Y-%m-%d').date(),
+            end_date=datetime.strptime(str(request.form.get('end_date')), '%Y-%m-%d').date()
         )
         db.session.add(run)
         db.session.commit()
@@ -432,6 +435,9 @@ def create_run(project_id):
                 case_id = int(key.replace('assign_case_', ''))
                 tester_ids = request.form.getlist(key)
                 for tid in tester_ids:
+                    if not tid.strip():
+                        continue
+
                     assign = TestRunAssignment(test_run_id=run.id, test_case_id=case_id, tester_id=int(tid))
                     db.session.add(assign)
         
@@ -449,7 +455,7 @@ def create_run(project_id):
         prio3=PRIORITY_LOW
     )
 
-# ROUTE: Modify existing test run (only possible in STATE_CREATED)
+# ROUTE: Modify existing test run (only possible in state "created")
 @app.route('/run/<int:run_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_run(run_id):
@@ -497,8 +503,8 @@ def update_run(run_id):
         return redirect(url_for('execute_run', run_id=run.id))
         
     run.title = request.form.get('title')
-    run.start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date()
-    run.end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date()
+    run.start_date = datetime.strptime(str(request.form.get('start_date')), '%Y-%m-%d').date()
+    run.end_date = datetime.strptime(str(request.form.get('end_date')), '%Y-%m-%d').date()
     
     TestRunAssignment.query.filter_by(test_run_id=run.id).delete()
     
@@ -507,6 +513,8 @@ def update_run(run_id):
             case_id = int(key.replace('assign_case_', ''))
             tester_ids = request.form.getlist(key)
             for tid in tester_ids:
+                if not tid.strip():
+                    continue
                 assign = TestRunAssignment(test_run_id=run.id, test_case_id=case_id, tester_id=int(tid))
                 db.session.add(assign)
     
@@ -589,8 +597,8 @@ def execute_run(run_id):
             assignment.comment = request.form.get('comment')
             
             for step in assignment.test_case.steps:
-                s_status = request.form.get(f'step_status_{step.step_number}')
-                s_comment = request.form.get(f'step_comment_{step.step_number}')
+                s_status = str(request.form.get(f'step_status_{step.step_number}'))
+                s_comment = str(request.form.get(f'step_comment_{step.step_number}'))
                 
                 step_res = TestStepResult.query.filter_by(assignment_id=assignment.id, step_number=step.step_number).first()
                 if not step_res:

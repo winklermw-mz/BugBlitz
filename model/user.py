@@ -11,11 +11,16 @@ user_roles = db.Table(
 )
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=True)
-    password_hash = db.Column(db.String(150), nullable=False)
+    id: int = db.Column(db.Integer, primary_key=True)
+    username: str = db.Column(db.String(150), unique=True, nullable=False)
+    email: str = db.Column(db.String(150), unique=True, nullable=True)
+    password_hash: str = db.Column(db.String(150), nullable=False)
     roles = db.relationship('Role', secondary=user_roles, backref='users')
+
+    def __init__(self, username: str, email: str, password_hash: str):
+        self.username = username
+        self.email = email
+        self.password_hash = password_hash
 
     def has_role(self, role_name):
         return any(r.name == role_name for r in self.roles)

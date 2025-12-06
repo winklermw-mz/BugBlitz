@@ -8,14 +8,20 @@ STATE_FINISHED = "finished"
 STATE_ABORTED = "aborted"
 
 class TestRun(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    title = db.Column(db.String(150), nullable=False)
-    start_date = db.Column(db.Date)
-    end_date = db.Column(db.Date)
-    status = db.Column(db.String(20), default=STATE_CREATED)
+    id: int = db.Column(db.Integer, primary_key=True)
+    project_id: int = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    title: str = db.Column(db.String(150), nullable=False)
+    start_date: date = db.Column(db.Date)
+    end_date: date = db.Column(db.Date)
+    status: str = db.Column(db.String(20), default=STATE_CREATED)
     assignments = db.relationship('TestRunAssignment', backref='test_run', cascade="all, delete-orphan")
     project = db.relationship('Project', backref='test_runs')
+
+    def __init__(self, project_id: int, title: str, start_date: date, end_date: date):
+        self.project_id = project_id
+        self.title = title
+        self.start_date = start_date
+        self.end_date = end_date
 
     def is_active(self):
         return self.status == STATE_ACTIVE

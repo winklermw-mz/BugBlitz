@@ -4,11 +4,16 @@ from model.run import STATE_FINISHED, STATE_ABORTED, STATE_ACTIVE, STATE_CREATED
 from model.run_assignment import TestRunAssignment, RESULT_NOT_TESTED
 
 class Project(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(150), nullable=False)
-    description = db.Column(db.Text)
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    id: int = db.Column(db.Integer, primary_key=True)
+    title: str = db.Column(db.String(150), nullable=False)
+    description: str = db.Column(db.Text)
+    owner_id: int = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     owner = db.relationship('User', backref='projects')
+
+    def __init__(self, title: str, description: str, owner_id: int):
+        self.title = title
+        self.description = description
+        self.owner_id = owner_id
 
     def get_open_runs(self, user) -> dict:
         my_runs = {}
