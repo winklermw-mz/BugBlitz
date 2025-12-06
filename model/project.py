@@ -35,6 +35,7 @@ class Project(db.Model):
                     "open_tests": len(open_tests),
                     "overdue": run.is_overdue(),
                     "state": run.status,
+                    "project": self.title,
                 }
         return my_runs
 
