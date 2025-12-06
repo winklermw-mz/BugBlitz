@@ -20,7 +20,7 @@
         {% endif %}
         
         {% if run.status == state_active %}
-            <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to reset the test plan for modifications? All existing test results will be lost.');">
+            <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to reset the test plan for modifications? During this operation test execution is suspended.');">
                 <input type="hidden" name="status" value="{{ state_created }}">
                 <button type="submit" class="btn btn-info">Modify</button>
             </form>
@@ -202,7 +202,7 @@
     {% endif %}
 
     {% if run.status == state_active %}
-        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to reset the test plan for modifications? All existing test results will be lost.');">
+        <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to reset the test plan for modifications? During this operation test execution is suspended.');">
             <input type="hidden" name="status" value="{{ state_created }}">
             <button type="submit" class="btn btn-info">Modify</button>
         </form>

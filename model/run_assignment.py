@@ -21,3 +21,7 @@ class TestRunAssignment(db.Model):
         self.test_run_id = test_run_id
         self.test_case_id = test_case_id
         self.tester_id = tester_id
+    
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()

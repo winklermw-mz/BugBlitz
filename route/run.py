@@ -59,7 +59,7 @@ def route_run_update(run_id: int):
     run.start_date = datetime.strptime(str(request.form.get('start_date')), '%Y-%m-%d').date()
     run.end_date = datetime.strptime(str(request.form.get('end_date')), '%Y-%m-%d').date()
     
-    TestRunAssignment.query.filter_by(test_run_id=run.id).delete()
+    existing_assignments = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
     
     for key in request.form:
         if key.startswith('assign_case_'):
@@ -68,11 +68,28 @@ def route_run_update(run_id: int):
             for tid in tester_ids:
                 if not tid.strip():
                     continue
-                assign = TestRunAssignment(test_run_id=run.id, test_case_id=case_id, tester_id=int(tid))
-                db.session.add(assign)
+
+                tester_id = int(tid)
+                current = TestRunAssignment.query.filter_by(
+                    test_run_id=run.id, 
+                    tester_id=tester_id,
+                    test_case_id=case_id
+                ).first()
+                
+                if not current:
+                    assign = TestRunAssignment(test_run_id=run.id, test_case_id=case_id, tester_id=tester_id)
+                    db.session.add(assign)
+                else:
+                    if current in existing_assignments:
+                        existing_assignments = [a for a in existing_assignments if a.id != current.id]
+            
+    for assignment in existing_assignments:
+        candidate = TestRunAssignment.query.get(assignment.id)
+        if candidate is not None:
+            candidate.delete()
     
     db.session.commit()
-    flash('Test Plan updated and assignments modified.')
+    flash('Test Plan updated and assignments have been modified.')
     return redirect(url_for('execute_run', run_id=run.id))
 
 # ROUTE: New test run
