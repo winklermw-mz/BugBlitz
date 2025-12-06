@@ -55,6 +55,6 @@ class TestRun(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def set_store(self, status):
+    def set_status(self, status):
         self.status = status
         db.session.commit()
