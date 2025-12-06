@@ -1,4 +1,5 @@
 from utils.database import db
+from model.step import TestStep
 
 PRIORITY_HIGH = "high"
 PRIORITY_NORMAL = "normal"
@@ -57,3 +58,13 @@ class TestCase(db.Model):
     def store(self):
         db.session.add(self)
         db.session.commit()
+
+    def add_steps(self, steps: dict):
+        for i, st in enumerate(steps):
+            step = TestStep(
+                test_case_id=self.id,
+                step_number=i + 1,
+                action=st.get('action', ''),
+                expected_result=st.get('expected_result', '')
+            )
+            db.session.add(step)

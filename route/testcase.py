@@ -169,16 +169,7 @@ def route_testcase_ai_gen(project_id: int, host: str, key: str, model: str):
         )
         new_case.store()
         
-        steps_data = case_data.get('steps', [])
-        for idx, step_data in enumerate(steps_data):
-            step = TestStep(
-                test_case_id=new_case.id,
-                step_number=idx + 1,
-                action=step_data.get('action', ''),
-                expected_result=step_data.get('expected_result', '')
-            )
-            db.session.add(step)
-            
+        new_case.add_steps(case_data.get('steps', []))
         db.session.commit()
         num_created += 1
 
