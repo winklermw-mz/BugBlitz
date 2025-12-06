@@ -24,11 +24,15 @@ def route_user_administration():
 
             if User.query.filter_by(username=username).first():
                 flash('Error: User already exists.')
-            else:
-                user = User(username, email, pwd)
-                user.set_roles(roles)
-                user.store()
-                flash(f"User '{user.username}' successfully created.")
+
+            if User.query.filter_by(email=email).first():
+                flash('Error: Email address is already in use.')
+                return redirect(url_for('admin_users'))
+            
+            user = User(username, email, pwd)
+            user.set_roles(roles)
+            user.store()
+            flash(f"User '{user.username}' successfully created.")
         
         elif 'delete' in request.form:
             user: User = User.query.get(str(request.form.get('user_id')))
@@ -60,6 +64,11 @@ def route_user_edit(user_id: int):
                 flash("Error: Passwords do not match.")
                 return redirect(url_for('edit_user', user_id=user.id))
             user.password_hash = generate_password_hash(pwd, method='scrypt')
+
+        existing = User.query.filter_by(email=email).first()
+        if existing and existing.id != user.id:
+            flash("Error: Email address is already in use.")
+            return redirect(url_for('edit_user', user_id=user.id))
 
         user.username = username
         user.email = email
