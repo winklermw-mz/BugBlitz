@@ -293,6 +293,9 @@ def delete_case(case_id):
     if not (current_user.is_admin() or (current_user.is_test_manager() and case.project.owner_id == current_user.id)): 
         abort(403)
 
+    for assignment in case.assignments:
+        db.session.delete(assignment)
+
     db.session.delete(case)
     db.session.commit()
     return redirect(url_for('view_project', project_id=case.project_id))

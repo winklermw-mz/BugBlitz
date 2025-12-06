@@ -23,6 +23,7 @@ class TestCase(db.Model):
     steps = db.relationship('TestStep', backref='test_case', cascade="all, delete-orphan", order_by='TestStep.step_number')
     tags = db.relationship('Tag', secondary=case_tags, backref='test_cases')
     project = db.relationship('Project', backref='test_cases')
+    assignments = db.relationship('TestRunAssignment', cascade='all, delete-orphan', passive_deletes=True)
 
     def __init__(
             self, 

@@ -8,7 +8,7 @@ RESULT_BLOCKED = "blocked"
 class TestRunAssignment(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
     test_run_id: int = db.Column(db.Integer, db.ForeignKey('test_run.id'), nullable=False)
-    test_case_id: int = db.Column(db.Integer, db.ForeignKey('test_case.id'), nullable=False)
+    test_case_id: int = db.Column(db.Integer, db.ForeignKey('test_case.id', ondelete='CASCADE'), nullable=False)
     tester_id: int = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     result: str = db.Column(db.String(50), default=RESULT_NOT_TESTED) 
     comment: str = db.Column(db.Text)
