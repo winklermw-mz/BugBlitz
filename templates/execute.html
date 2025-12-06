@@ -69,10 +69,21 @@
     </div>
 </div>
 
+<div class="mb-3">
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="filterMine" {{ "checked" if run.status == state_active else "" }}>
+        <label class="form-check-label" for="filterMine">Show only my test cases</label>
+    </div>
+
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="filterNotTested" {{ "checked" if run.status == state_active else "" }}>
+        <label class="form-check-label" for="filterNotTested">Show only not tested</label>
+    </div>
+</div>
 
 <div class="accordion" id="accordionCases">
     {% for assign in assignments %}
-    <div class="accordion-item">
+    <div class="accordion-item" data-tester="{{ assign.tester_id }}" data-result="{{ assign.result }}">
         <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c{{ assign.id }}">
                 <span class="badge me-2 
@@ -220,6 +231,41 @@
     <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-light">Back</a>
 {% endif %}
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const mine = document.getElementById("filterMine");
+    const notTested = document.getElementById("filterNotTested");
+
+    function applyFilters() {
+        const userId = {{ current_user.id }};
+        document.querySelectorAll(".accordion-item").forEach(item => {
+
+            const assignUser = parseInt(item.dataset.tester);
+            const result = item.dataset.result;
+
+            let show = true;
+
+            // Filter: nur eigene
+            if (mine.checked && assignUser !== userId) {
+                show = false;
+            }
+
+            // Filter: nur nicht getestete
+            if (notTested.checked && result !== "{{ not_tested }}") {
+                show = false;
+            }
+
+            item.style.display = show ? "" : "none";
+        });
+    }
+
+    mine.addEventListener("change", applyFilters);
+    notTested.addEventListener("change", applyFilters);
+
+    applyFilters();
+});
+</script>
 
 <style>
 .table.table-teststeps {
