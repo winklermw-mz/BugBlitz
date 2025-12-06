@@ -21,7 +21,7 @@ class Project(db.Model):
             if run.status == STATE_ABORTED or run.status == STATE_FINISHED:
                 continue
 
-            if user.is_tester() and run.status == STATE_CREATED:
+            if user.is_tester() and not user.is_test_manager() and run.status == STATE_CREATED:
                 continue
 
             assignments = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
