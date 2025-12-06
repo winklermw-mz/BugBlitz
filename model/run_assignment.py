@@ -14,7 +14,7 @@ class TestRunAssignment(db.Model):
     comment: str = db.Column(db.Text)
     step_results = db.relationship('TestStepResult', backref='assignment', cascade="all, delete-orphan")
     
-    test_case = db.relationship('TestCase')
+    test_case = db.relationship('TestCase', back_populates='assignments')
     tester = db.relationship('User')
 
     def __init__(self, test_run_id: int, test_case_id: int, tester_id: int):
