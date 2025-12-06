@@ -25,19 +25,11 @@ def route_user_administration():
             if User.query.filter_by(username=uname).first():
                 flash('Error: User already exists.')
             else:
-                new_user = User(
-                    username=uname, 
-                    email=email, 
-                    password_hash=generate_password_hash(pwd, method='scrypt')
-                )
-                
-                for r_name in selected_roles:
-                    r = Role.query.filter_by(name=r_name).first()
-                    if r: new_user.roles.append(r)
-
-                db.session.add(new_user)
-                db.session.commit()
-                flash('User successfully created.')
+                user = User(uname, email, pwd)
+                user.set_roles(selected_roles)
+                user.store()
+                flash(f"User '{user.username}' successfully created.")
+        
         elif 'delete' in request.form:
             user: User = User.query.get(str(request.form.get('user_id')))
             username = user.username

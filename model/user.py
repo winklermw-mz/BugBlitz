@@ -3,6 +3,7 @@ from model.role import ROLE_MANAGER, ROLE_TESTER
 from flask_login import UserMixin
 from model.run_assignment import TestRunAssignment
 from model.project import Project
+from model.role import Role
 
 USER_ADMIN = "admin"
 
@@ -46,4 +47,13 @@ class User(UserMixin, db.Model):
             project.delete()
         
         db.session.delete(self)
+        db.session.commit()
+    
+    def set_roles(self, roles: list):
+        for role_name in roles:
+            r = Role.query.filter_by(name=role_name).first()
+            if r: self.roles.append(r)
+
+    def store(self):
+        db.session.add(self)
         db.session.commit()
