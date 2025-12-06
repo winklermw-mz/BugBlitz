@@ -1,9 +1,7 @@
 import os
 from utils.database import setup_database, setup_login_manager
-from datetime import datetime
-from flask import Flask, render_template, redirect, url_for, flash, request, abort, jsonify
-from flask_login import login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask
+from flask_login import login_required
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dein-geheimer-schluessel-hier'
@@ -17,617 +15,111 @@ LLM_HOST = os.getenv("LLM_HOST", "http://localhost:1234/v1")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "lm-studio")
 LLM_MODEL = os.getenv("LLM_MODEL", "qwen/qwen3-vl-4b")
 
-from model.user import User, USER_ADMIN
-from model.role import Role, ROLE_ADMIN, ROLE_MANAGER, ROLE_TESTER
-from model.tag import Tag
-from model.project import Project
-from model.case import TestCase, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
-from model.step import TestStep
-from model.run import TestRun, STATE_ABORTED, STATE_ACTIVE, STATE_FINISHED, STATE_CREATED
-from model.run_assignment import TestRunAssignment, RESULT_NOT_TESTED, RESULT_BLOCKED, RESULT_FAILED, RESULT_OK
-from model.step_result import TestStepResult
+from model.user import User
 from utils.init import create_initial_data
-from utils.llm import call_ai_model
+from route.login import route_login
+from route.logout import route_logout
+from route.dashboard import route_dashboard
+from route.user import route_user_administration, route_user_edit
+from route.project import route_project_create, route_project_delete, route_project_view
+from route.testcase import route_testcase_delete, route_testcase_edit, route_testcase_sort, route_testcase_ai_prepare, route_testcase_ai_gen
+from route.run import route_run_edit, route_run_create, route_run_update, route_run_update_state, route_run_execute
 
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ROUTE: Dashboard
 @app.route('/')
 @login_required
 def dashboard():
-    all_projects = Project.query.all()
-    my_runs = {}
+    return route_dashboard()
 
-    for project in all_projects:
-        my_runs |= project.get_open_runs(current_user)
-
-    if current_user.is_admin():
-        return render_template(
-            'dashboard.html', 
-            my_projects=all_projects, 
-            my_runs=my_runs, 
-            state_created=STATE_CREATED, 
-            state_active=STATE_ACTIVE
-        )
-    
-    if current_user.is_test_manager():
-        my_projects = Project.query.filter_by(owner_id=current_user.id).all()
-        return render_template('dashboard.html', 
-            my_projects=my_projects, 
-            my_runs=my_runs, 
-            state_created=STATE_CREATED, 
-            state_active=STATE_ACTIVE
-        )
-
-    return render_template('dashboard.html', my_runs=my_runs, state_created=STATE_CREATED, state_active=STATE_ACTIVE)
-
-# ROUTE: Login form, redirected to dashboard
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        user = User.query.filter_by(username=request.form.get('username')).first()
-        if user and check_password_hash(user.password_hash, str(request.form.get('password'))):
-            login_user(user)
-            return redirect(url_for('dashboard'))
-        
-        flash('Error: Login failed.')
-    return render_template('login.html')
+    return route_login()
 
-# ROUTE: Logout, redirected to login form
 @app.route('/logout')
 @login_required
 def logout():
-    logout_user()
-    return redirect(url_for('login'))
+    return route_logout()
 
-# ROUTE: User administration
 @app.route('/admin/users', methods=['GET', 'POST'])
 @login_required
 def admin_users():
-    if not current_user.is_admin(): 
-        abort(403)
-    
-    if request.method == 'POST':
-        if 'create' in request.form:
-            uname = str(request.form.get('username'))
-            pwd = str(request.form.get('password'))
-            pwd2 = str(request.form.get('password_repeat'))
-            email = str(request.form.get('email'))
-            selected_roles = request.form.getlist('roles')
-            
-            if pwd != pwd2:
-                flash('Error: Passwords do not match.')
-                return redirect(url_for('admin_users'))
+    return route_user_administration()
 
-            if User.query.filter_by(username=uname).first():
-                flash('Error: User already exists.')
-            else:
-                new_user = User(
-                    username=uname, 
-                    email=email, 
-                    password_hash=generate_password_hash(pwd, method='scrypt')
-                )
-                
-                for r_name in selected_roles:
-                    r = Role.query.filter_by(name=r_name).first()
-                    if r: new_user.roles.append(r)
-
-                db.session.add(new_user)
-                db.session.commit()
-                flash('User successfully created.')
-        elif 'delete' in request.form:
-            user: User = User.query.get(str(request.form.get('user_id')))
-            username = user.username
-            user.delete()
-            flash(f"Deleted user '{username}'")
-            
-    users = User.query.all()
-    all_roles = Role.query.all()
-    return render_template('admin.html', users=users, all_roles=all_roles, admin_id=USER_ADMIN)
-
-# ROUTE: Modify user
 @app.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
-def edit_user(user_id):
-    if not current_user.is_admin():
-        abort(403)
+def edit_user(user_id: int):
+    return route_user_edit(user_id)
 
-    user = User.query.get_or_404(user_id)
-    all_roles = Role.query.all()
-
-    if request.method == 'POST':
-        username = str(request.form.get('username'))
-        email = str(request.form.get('email'))
-        roles = request.form.getlist('roles')
-        pwd = str(request.form.get('password'))
-        pwd2 = str(request.form.get('password_repeat'))
-
-        if pwd or pwd2:
-            if pwd != pwd2:
-                flash("Error: Passwords do not match.")
-                return redirect(url_for('edit_user', user_id=user.id))
-            user.password_hash = generate_password_hash(pwd, method='scrypt')
-
-        user.username = username
-        user.email = email
-
-        user.roles = []
-        for role_name in roles:
-            r = Role.query.filter_by(name=role_name).first()
-            if r:
-                user.roles.append(r)
-
-        db.session.commit()
-        flash("User updated.")
-        return redirect(url_for('admin_users'))
-
-    return render_template('user_form.html', user=user, all_roles=all_roles)
-
-# ROUTE: New project
 @app.route('/project/new', methods=['GET', 'POST'])
 @login_required
 def create_project():
-    if not (current_user.is_test_manager() or current_user.is_admin()): 
-        abort(403)
+    return route_project_create()
 
-    if request.method == 'POST':
-        project = Project(
-            title=str(request.form.get('title')), 
-            description=str(request.form.get('description')), 
-            owner_id=current_user.id
-        )
-        db.session.add(project)
-        db.session.commit()
-        return redirect(url_for('dashboard'))
-    
-    return render_template('project_form.html', project=None)
-
-# ROUTE: Delete project, redirected to dashboard
 @app.route('/project/<int:project_id>/delete', methods=['POST'])
 @login_required
-def delete_project(project_id):
-    project = Project.query.get_or_404(project_id)
-    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
-        abort(403)
-    
-    project.delete()
-    flash('Project successfully deleted.')
-    return redirect(url_for('dashboard'))
+def delete_project(project_id: int):
+    return route_project_delete(project_id)
 
-# ROUTE: Modify project
 @app.route('/project/<int:project_id>')
 @login_required
-def view_project(project_id):
-    project = Project.query.get_or_404(project_id)
-    sorted_cases = TestCase.query.filter_by(project_id=project_id).order_by(TestCase.sequence.asc(), TestCase.id.asc()).all()
+def view_project(project_id: int):
+    return route_project_view(project_id)
 
-    statistics = {}
-    for run in project.test_runs:
-        statistics[run.id] = run.calculate_statistics()
-
-    return render_template(
-        'project_view.html', 
-        project=project, 
-        sorted_cases=sorted_cases, 
-        statistics=statistics, 
-        prio1=PRIORITY_HIGH, 
-        prio2=PRIORITY_NORMAL, 
-        prio3=PRIORITY_LOW, 
-        not_tested=RESULT_NOT_TESTED, 
-        blocked=RESULT_BLOCKED, 
-        failed=RESULT_FAILED, 
-        ok=RESULT_OK, 
-        active=STATE_ACTIVE, 
-        finished=STATE_FINISHED, 
-        aborted=STATE_ABORTED,
-        created=STATE_CREATED
-    )
-
-# ROUTE: New test case, modify test case
 @app.route('/project/<int:project_id>/case/new', methods=['GET', 'POST'])
 @app.route('/project/<int:project_id>/case/<int:case_id>/edit', methods=['GET', 'POST'])
 @login_required
-def manage_case(project_id, case_id=None):
-    project = Project.query.get_or_404(project_id)
-    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
-        abort(403)
+def manage_case(project_id: int , case_id: int|None = None):
+    return route_testcase_edit(project_id, case_id)
 
-    if case_id:
-        case: TestCase = TestCase.query.get(case_id)
-    else:
-        case: TestCase = TestCase(project_id=project.id)
-        max_seq = db.session.query(db.func.max(TestCase.sequence)).filter_by(project_id=project.id).scalar()
-        case.sequence = (max_seq or 0) + 1
-
-    if request.method == 'POST':
-        case.sequence = int(request.form.get('sequence', 0))
-        case.title = str(request.form.get('title'))
-        case.summary = str(request.form.get('summary'))
-        case.precondition = str(request.form.get('precondition'))
-        case.postcondition = str(request.form.get('postcondition'))
-        case.priority = str(request.form.get('priority'))
-        case.source = str(request.form.get('source'))
-        
-        tag_names = [t.strip() for t in request.form.get('tags', '').split(' ') if t.strip()]
-        case.tags = []
-        for t_name in tag_names:
-            tag = Tag.query.filter_by(name=t_name).first()
-            if not tag:
-                tag = Tag(name=t_name)
-                db.session.add(tag)
-            case.tags.append(tag)
-
-        db.session.add(case)
-        db.session.commit()
-        
-        TestStep.query.filter_by(test_case_id=case.id).delete()
-        actions = request.form.getlist('action[]')
-        results = request.form.getlist('result[]')
-        
-        for idx, (act, res) in enumerate(zip(actions, results)):
-            if act.strip() or res.strip():
-                step = TestStep(test_case_id=case.id, step_number=idx+1, action=act, expected_result=res)
-                db.session.add(step)
-        
-        db.session.commit()
-        return redirect(url_for('view_project', project_id=project.id))
-
-    all_tags = [t.name for t in Tag.query.all()]
-    return render_template(
-        'case_form.html', 
-        project=project, 
-        case=case, 
-        all_tags=all_tags, 
-        prio1=PRIORITY_HIGH, 
-        prio2=PRIORITY_NORMAL, 
-        prio3=PRIORITY_LOW
-    )
-
-# ROUTE: Delete test case, redirected to project
 @app.route('/case/<int:case_id>/delete', methods=['POST'])
 @login_required
-def delete_case(case_id):
-    case: TestCase = TestCase.query.get_or_404(case_id)
-    if not (current_user.is_admin() or (current_user.is_test_manager() and case.project.owner_id == current_user.id)): 
-        abort(403)
+def delete_case(case_id: int):
+    return route_testcase_delete(case_id)
 
-    title = case.title
-    case.delete()
-    flash(f"Deleted test case '{title}'")
-    return redirect(url_for('view_project', project_id=case.project_id))
-
-# ROUTE: Sort test cases
 @app.route('/case/<int:case_id>/sort/<direction>', methods=['POST'])
 @login_required
-def sort_case(case_id, direction):
-    current_case = TestCase.query.get_or_404(case_id)
-    project = current_case.project
-    
-    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)):
-        abort(403)
+def sort_case(case_id: int, direction: str):
+    return route_testcase_sort(case_id, direction)
 
-    sorted_cases = TestCase.query.filter_by(project_id=project.id).order_by(TestCase.sequence.asc(), TestCase.id.asc()).all()
-    
-    current_index = [i for i, case in enumerate(sorted_cases) if case.id == case_id][0]
-
-    if direction == 'up' and current_index > 0:
-        prev_case = sorted_cases[current_index - 1]
-        temp_sequence = current_case.sequence
-        current_case.sequence = prev_case.sequence
-        prev_case.sequence = temp_sequence
-        
-        db.session.commit()
-        flash(f'Test case "{current_case.title}" moved up.')
-        
-    elif direction == 'down' and current_index < len(sorted_cases) - 1:
-        next_case = sorted_cases[current_index + 1]
-        temp_sequence = current_case.sequence
-        current_case.sequence = next_case.sequence
-        next_case.sequence = temp_sequence
-        
-        db.session.commit()
-        flash(f'Test case "{current_case.title}" moved down.')
-        
-    return redirect(url_for('view_project', project_id=project.id))
-
-# ROUTE: Wizard for AI supported test case generation
 @app.route('/project/<int:project_id>/case/ai')
 @login_required
-def create_case_ai_form(project_id):
-    project = Project.query.get_or_404(project_id)
-    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
-        abort(403)
-        
-    return render_template('case_ai_form.html', project=project)
+def create_case_ai_form(project_id: int):
+    return route_testcase_ai_prepare(project_id)
 
-# ROUTE: AI generated test cases
 @app.route('/project/<int:project_id>/case/ai/extract', methods=['POST'])
 @login_required
-def extract_case_ai(project_id):
-    project = Project.query.get_or_404(project_id)
-    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
-        abort(403)
-        
-    requirement_text = request.form.get('requirement', '')
-    
-    if not requirement_text.strip():
-        flash('Error: Requirement text is empty.', 'error')
-        return redirect(url_for('create_case_ai_form', project_id=project.id))
+def extract_case_ai(project_id: int):
+    return route_testcase_ai_gen(project_id, LLM_HOST, LLM_API_KEY, LLM_MODEL)
 
-    try:
-        generated_cases_data = call_ai_model(requirement_text, LLM_HOST, LLM_API_KEY, LLM_MODEL)
-    except Exception as e:
-        flash(f"Error: AI model returned an invalid response: {e}", "error")
-        return redirect(url_for('create_case_ai_form', project_id=project.id))
-    
-    if generated_cases_data is None:
-        flash('Error: Could not connect to AI model.', 'error')
-        return redirect(url_for('create_case_ai_form', project_id=project.id))
-
-    num_created = 0
-    
-    for case_data in generated_cases_data:
-        max_seq = db.session.query(db.func.max(TestCase.sequence)).filter_by(project_id=project.id).scalar()
-        
-        tags = []
-        my_tags = [t.strip() for t in case_data.get('tags', '').split(' ') if t.strip()]
-        my_tags.append("#gen-ai")
-
-        for my_tag in my_tags:
-            tag = Tag.query.filter_by(name=my_tag).first()
-            if not tag:
-                tag = Tag(name=my_tag)
-                db.session.add(tag)
-                db.session.commit()
-            tags.append(tag)
-            
-        new_case = TestCase(
-            project_id=project.id,
-            sequence=(max_seq or 0) + 1,
-            title=case_data.get('title', 'Generated Test Case'),
-            summary=case_data.get('summary'),
-            precondition=case_data.get('precondition'),
-            postcondition=case_data.get('postcondition'),
-            priority=case_data.get('priority', PRIORITY_NORMAL),
-            source=case_data.get('source'),
-            tags=tags
-        )
-        db.session.add(new_case)
-        db.session.commit()
-        
-        steps_data = case_data.get('steps', [])
-        for idx, step_data in enumerate(steps_data):
-            step = TestStep(
-                test_case_id=new_case.id,
-                step_number=idx + 1,
-                action=step_data.get('action', ''),
-                expected_result=step_data.get('expected_result', '')
-            )
-            db.session.add(step)
-            
-        db.session.commit()
-        num_created += 1
-
-    flash(f"{num_created} test cases successfully generated and added to the current project. All generated test cases have been marked with tag #gen-ai automatically.")
-    return redirect(url_for('view_project', project_id=project.id))
-
-# ROUTE: New test run
 @app.route('/project/<int:project_id>/run/new', methods=['GET', 'POST'])
 @login_required
-def create_run(project_id):
-    project = Project.query.get_or_404(project_id)
-    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
-        abort(403)
-        
-    if request.method == 'POST':
-        run = TestRun(
-            project_id=project.id, 
-            title=str(request.form.get('title')),
-            start_date=datetime.strptime(str(request.form.get('start_date')), '%Y-%m-%d').date(),
-            end_date=datetime.strptime(str(request.form.get('end_date')), '%Y-%m-%d').date()
-        )
-        db.session.add(run)
-        db.session.commit()
-        
-        for key in request.form:
-            if key.startswith('assign_case_'):
-                case_id = int(key.replace('assign_case_', ''))
-                tester_ids = request.form.getlist(key)
-                for tid in tester_ids:
-                    if not tid.strip():
-                        continue
+def create_run(project_id: int):
+    return route_run_create(project_id)
 
-                    assign = TestRunAssignment(test_run_id=run.id, test_case_id=case_id, tester_id=int(tid))
-                    db.session.add(assign)
-        
-        db.session.commit()
-        flash(f'New test Plan "{run.title}" created.')
-        return redirect(url_for('view_project', project_id=project.id))
-
-    potential_testers = User.query.filter(User.roles.any(Role.name.in_([ROLE_TESTER, ROLE_MANAGER]))).all()
-    return render_template(
-        'run_form.html', 
-        project=project, 
-        testers=potential_testers, 
-        prio1=PRIORITY_HIGH, 
-        prio2=PRIORITY_NORMAL, 
-        prio3=PRIORITY_LOW
-    )
-
-# ROUTE: Modify existing test run (only possible in state "created")
 @app.route('/run/<int:run_id>/edit', methods=['GET', 'POST'])
 @login_required
-def edit_run(run_id):
-    run = TestRun.query.get_or_404(run_id)
-    project = run.project
+def edit_run(run_id: int):
+    return route_run_edit(run_id)
 
-    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
-        abort(403)
-        
-    if run.status != STATE_CREATED:
-        flash(f'Error: Test Plan must be in status "{STATE_CREATED}" for editing assignments.', 'error')
-        return redirect(url_for('execute_run', run_id=run.id))
-    
-    current_assignments = {}
-    for assignment in run.assignments:
-        if assignment.test_case_id not in current_assignments:
-            current_assignments[assignment.test_case_id] = []
-        current_assignments[assignment.test_case_id].append(assignment.tester_id)
-         
-    potential_testers = User.query.filter(User.roles.any(Role.name.in_([ROLE_TESTER, ROLE_MANAGER]))).all()
-    
-    return render_template(
-        'run_form.html', 
-        project=project, 
-        run=run,
-        testers=potential_testers, 
-        current_assignments=current_assignments,
-        prio1=PRIORITY_HIGH, 
-        prio2=PRIORITY_NORMAL, 
-        prio3=PRIORITY_LOW
-    )
-
-# ROUTE: Update existing test run
 @app.route('/run/<int:run_id>/update', methods=['POST'])
 @login_required
-def update_run(run_id):
-    run = TestRun.query.get_or_404(run_id)
-    project = run.project
+def update_run(run_id: int):
+    return route_run_update(run_id)
 
-    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
-        abort(403)
-        
-    if run.status != STATE_CREATED:
-        flash(f'Error: Test Plan must be in status "{STATE_CREATED}" for updating assignments.', 'error')
-        return redirect(url_for('execute_run', run_id=run.id))
-        
-    run.title = request.form.get('title')
-    run.start_date = datetime.strptime(str(request.form.get('start_date')), '%Y-%m-%d').date()
-    run.end_date = datetime.strptime(str(request.form.get('end_date')), '%Y-%m-%d').date()
-    
-    TestRunAssignment.query.filter_by(test_run_id=run.id).delete()
-    
-    for key in request.form:
-        if key.startswith('assign_case_'):
-            case_id = int(key.replace('assign_case_', ''))
-            tester_ids = request.form.getlist(key)
-            for tid in tester_ids:
-                if not tid.strip():
-                    continue
-                assign = TestRunAssignment(test_run_id=run.id, test_case_id=case_id, tester_id=int(tid))
-                db.session.add(assign)
-    
-    db.session.commit()
-    flash('Test Plan updated and assignments modified.')
-    return redirect(url_for('execute_run', run_id=run.id))
-
-# ROUTE: Update state of test run, redirect to referrer
 @app.route('/run/<int:run_id>/status', methods=['POST'])
 @login_required
-def update_run_status(run_id):
-    run = TestRun.query.get_or_404(run_id)
-    if not (current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id)): 
-        abort(403)
-    
-    new_status = request.form.get('status')
+def update_run_status(run_id: int):
+    return route_run_update_state(run_id)
 
-    if new_status in [STATE_CREATED, STATE_ACTIVE, STATE_FINISHED, STATE_ABORTED]:
-        if new_status == STATE_ACTIVE and run.status == STATE_CREATED:
-            run.status = STATE_ACTIVE
-            db.session.commit()
-            flash(f'Test plan "{run.title}" activated.')
-            return redirect(request.referrer)
-
-        if new_status == STATE_CREATED and run.status == STATE_ACTIVE:
-            run.status = STATE_CREATED
-            db.session.commit()
-            flash(f'Test plan "{run.title}" reset to created state for adjustments.')
-            return redirect(request.referrer)
-            
-        if new_status == STATE_FINISHED and run.status == STATE_ACTIVE:
-            all_assigns = TestRunAssignment.query.filter_by(test_run_id=run_id).all()
-            for assignment in all_assigns:
-                if assignment.result == RESULT_NOT_TESTED:
-                    flash("Error: Cannot close test plan because at least one test case is open.")
-                    return redirect(url_for('execute_run', run_id=run_id))
-
-            run.status = STATE_FINISHED
-            db.session.commit()
-            flash(f'Test plan "{run.title}" finished.')
-            return redirect(request.referrer)
-            
-        if new_status == STATE_ABORTED and run.status == STATE_ACTIVE:
-             run.status = STATE_ABORTED
-             db.session.commit()
-             flash(f'Test plan "{run.title}" aborted.')
-             return redirect(request.referrer)
-        
-        if new_status == STATE_ACTIVE and (run.status == STATE_ABORTED or run.status == STATE_FINISHED):
-            run.status = STATE_ACTIVE
-            db.session.commit()
-            flash(f'Test plan "{run.title}" restarted.')
-            return redirect(request.referrer)
-
-    return redirect(request.referrer)
-
-# ROUTE: Start test run
 @app.route('/run/<int:run_id>/execute', methods=['GET', 'POST'])
 @login_required
-def execute_run(run_id):
-    run = TestRun.query.get_or_404(run_id)
-    
-    if current_user.is_admin() or current_user.is_test_manager():
-        assignments = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
-    else:
-        assignments = TestRunAssignment.query.filter_by(test_run_id=run.id, tester_id=current_user.id).all()
+def execute_run(run_id: int):
+    return route_run_execute(run_id)
 
-    stats = run.calculate_statistics()
-
-    if request.method == 'POST':
-        assign_id = request.form.get('assignment_id')
-        assignment = TestRunAssignment.query.get(assign_id)
-        
-        allowed = current_user.is_admin() or \
-                  (current_user.is_test_manager() and run.project.owner_id == current_user.id) or \
-                  (current_user.id == assignment.tester_id and run.status == STATE_ACTIVE)
-                  
-        if assignment and allowed:
-            assignment.result = request.form.get('status')
-            assignment.comment = request.form.get('comment')
-            
-            for step in assignment.test_case.steps:
-                s_status = str(request.form.get(f'step_status_{step.step_number}'))
-                s_comment = str(request.form.get(f'step_comment_{step.step_number}'))
-                
-                step_res = TestStepResult.query.filter_by(assignment_id=assignment.id, step_number=step.step_number).first()
-                if not step_res:
-                    step_res = TestStepResult(assignment_id=assignment.id, step_number=step.step_number)
-                    db.session.add(step_res)
-                
-                step_res.status = s_status
-                step_res.comment = s_comment
-                
-            db.session.commit()
-            flash('Result saved.')
-            return redirect(url_for('execute_run', run_id=run.id))
-
-    return render_template(
-        'execute.html', 
-        run=run, 
-        assignments=assignments, 
-        stats=stats, 
-        state_active=STATE_ACTIVE, 
-        state_aborted=STATE_ABORTED, 
-        state_finished=STATE_FINISHED, 
-        state_created=STATE_CREATED,
-        not_tested=RESULT_NOT_TESTED, 
-        blocked=RESULT_BLOCKED, 
-        failed=RESULT_FAILED,
-        ok=RESULT_OK
-    )
 
 if __name__ == '__main__':
     create_initial_data(app)
