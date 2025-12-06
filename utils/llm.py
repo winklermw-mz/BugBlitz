@@ -1,5 +1,5 @@
-from openai import OpenAI
 import json
+from openai import OpenAI
 from model.case import PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 
 
@@ -38,7 +38,7 @@ def get_system_prompt() -> str:
             "precondition": "Notwendige Voraussetzungen (optional)",
             "postcondition": "Erwarteter Zustand nach erfolgreicher Ausführung (optional)",
             "priority": "Eine der erlaubten Prioritäten: "{PRIORITY_HIGH}", "{PRIORITY_NORMAL}", "{PRIORITY_LOW}"",
-            "source": "Quelle, z.B. 'KI-Extraktion'",
+            "source": "Benenne die Quelle, wenn diese explizit angegeben Quelle wurde, ansonsten '---'",
             "tags": "Ein oder mehrere passende Hashtags, getrennt durch Leerzeichen, z.B. #testfall #ki",
             "steps": [
               {{
