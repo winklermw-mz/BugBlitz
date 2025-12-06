@@ -69,7 +69,10 @@
                             <button type="submit" class="btn btn-sm btn-outline-dark" title="Move down" {% if loop.last %}disabled{% endif %}>⬇</button>
                         </form>
                         
-                        <a href="{{ url_for('manage_case', project_id=project.id, case_id=case.id) }}" class="btn btn-sm btn-outline-primary">Öffnen</a>
+                        <a href="{{ url_for('manage_case', project_id=project.id, case_id=case.id) }}" class="btn btn-sm btn-outline-primary">Open</a>
+                        <form action="{{ url_for('copy_case', case_id=case.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Copy</button>
+                        </form>
                         <form action="{{ url_for('delete_case', case_id=case.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete test case now? Already existing executions will be removed as well.');">
                             <button type="submit" class="btn btn-sm btn-outline-danger">X</button>
                         </form>

@@ -175,3 +175,49 @@ def route_testcase_ai_gen(project_id: int, host: str, key: str, model: str):
 
     flash(f"{num_created} test cases successfully generated and added to the current project. All generated test cases have been marked with tag #gen-ai automatically.")
     return redirect(url_for('view_project', project_id=project.id))
+
+# ROUTE: Copy test case and append at end
+def route_testcase_copy(testcase_id: int):
+    original: TestCase = TestCase.query.get_or_404(testcase_id)
+    project = Project.query.get_or_404(original.project_id)
+
+    if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)):
+        abort(403)
+
+    if original.project_id != project.id:
+        abort(400, "Test case does not belong to this project")
+
+    max_seq = db.session.query(db.func.max(TestCase.sequence)).filter_by(project_id=project.id).scalar()
+    new_sequence = (max_seq or 0) + 1
+
+    new_tags = list(original.tags)
+
+    new_case = TestCase(
+        project_id=project.id,
+        sequence=new_sequence,
+        title=original.title + " (Copy)",
+        summary=original.summary,
+        precondition=original.precondition,
+        postcondition=original.postcondition,
+        priority=original.priority,
+        source=original.source,
+        tags=new_tags
+    )
+    new_case.store()
+    db.session.flush()
+
+    original_steps = TestStep.query.filter_by(test_case_id=original.id).order_by(TestStep.step_number.asc()).all()
+
+    for step in original_steps:
+        new_step = TestStep(
+            test_case_id=new_case.id,
+            step_number=step.step_number,
+            action=step.action,
+            expected_result=step.expected_result
+        )
+        db.session.add(new_step)
+
+    db.session.commit()
+
+    flash(f"Test case '{original.title}' has been copied and appended at the end of the list.")
+    return redirect(url_for('view_project', project_id=project.id))

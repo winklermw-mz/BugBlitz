@@ -22,7 +22,7 @@ from route.logout import route_logout
 from route.dashboard import route_dashboard
 from route.user import route_user_administration, route_user_edit
 from route.project import route_project_create, route_project_delete, route_project_view
-from route.testcase import route_testcase_delete, route_testcase_edit, route_testcase_sort, route_testcase_ai_prepare, route_testcase_ai_gen
+from route.testcase import route_testcase_delete, route_testcase_edit, route_testcase_sort, route_testcase_ai_prepare, route_testcase_ai_gen, route_testcase_copy
 from route.run import route_run_edit, route_run_create, route_run_update, route_run_update_state, route_run_execute
 
 
@@ -74,6 +74,11 @@ def view_project(project_id: int):
 @login_required
 def manage_case(project_id: int , case_id: int|None = None):
     return route_testcase_edit(project_id, case_id)
+
+@app.route('/case/<int:case_id>/copy', methods=['POST'])
+@login_required
+def copy_case(case_id: int):
+    return route_testcase_copy(case_id)
 
 @app.route('/case/<int:case_id>/delete', methods=['POST'])
 @login_required
