@@ -11,6 +11,7 @@ from model.run import TestRun
 from model.run_assignment import TestRunAssignment, RESULT_NOT_TESTED, RESULT_BLOCKED, RESULT_FAILED, RESULT_OK
 from model.project import Project
 from model.step_result import TestStepResult
+from model.testcase import TestCase
 
 # ROUTE: Modify existing test run (only possible in state "created")
 def route_run_edit(run_id: int):
@@ -179,9 +180,20 @@ def route_run_execute(run_id: int):
     run = TestRun.query.get_or_404(run_id)
     
     if current_user.is_admin() or current_user.is_test_manager():
-        assignments = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
+        assignments = TestRunAssignment.query \
+            .filter_by(test_run_id=run.id) \
+            .join(TestRunAssignment.test_case) \
+            .join(TestRunAssignment.tester) \
+            .order_by(TestCase.title.asc(), User.username.asc()) \
+            .all()
     else:
-        assignments = TestRunAssignment.query.filter_by(test_run_id=run.id, tester_id=current_user.id).all()
+        assignments = TestRunAssignment.query \
+            .filter_by(test_run_id=run.id, tester_id=current_user.id) \
+            .filter_by(test_run_id=run.id) \
+            .join(TestRunAssignment.test_case) \
+            .join(TestRunAssignment.tester) \
+            .order_by(TestCase.title.asc(), User.username.asc()) \
+            .all()
 
     stats = run.calculate_statistics()
 
