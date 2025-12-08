@@ -12,8 +12,8 @@ class TestRunAssignment(db.Model):
     tester_id: int = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     result: str = db.Column(db.String(50), default=RESULT_NOT_TESTED) 
     comment: str = db.Column(db.Text)
-    step_results = db.relationship('TestStepResult', backref='assignment', cascade="all, delete-orphan")
     
+    step_results = db.relationship('TestStepResult', backref='assignment', cascade="all, delete-orphan")
     test_case = db.relationship('TestCase', back_populates='assignments')
     tester = db.relationship('User')
 

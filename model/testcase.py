@@ -21,6 +21,7 @@ class TestCase(db.Model):
     postcondition: str = db.Column(db.Text)
     priority: str = db.Column(db.String(20))
     source: str = db.Column(db.String(100))
+    
     steps = db.relationship('TestStep', backref='test_case', cascade="all, delete-orphan", order_by='TestStep.step_number')
     tags = db.relationship('Tag', secondary=case_tags, backref='test_cases')
     project = db.relationship('Project', backref='test_cases')

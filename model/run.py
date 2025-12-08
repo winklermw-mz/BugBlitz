@@ -14,6 +14,7 @@ class TestRun(db.Model):
     start_date: date = db.Column(db.Date)
     end_date: date = db.Column(db.Date)
     status: str = db.Column(db.String(20), default=STATE_CREATED)
+    
     assignments = db.relationship('TestRunAssignment', backref='test_run', cascade="all, delete-orphan")
     project = db.relationship('Project', backref='test_runs')
 

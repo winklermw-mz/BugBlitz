@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
     username: str = db.Column(db.String(150), unique=True, nullable=False)
     email: str = db.Column(db.String(150), unique=True, nullable=True)
     password_hash: str = db.Column(db.String(150), nullable=False)
+    
     roles = db.relationship('Role', secondary=user_roles, backref='users')
 
     def __init__(self, username: str, email: str, password_hash: str):
