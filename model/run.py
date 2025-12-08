@@ -40,14 +40,22 @@ class TestRun(db.Model):
             "total": count, 
             "percentage": 0,
             "overdue": self.is_overdue(),
+            "testers": {},
             RESULT_OK: 0,
             RESULT_FAILED: 0, 
             RESULT_BLOCKED: 0, 
             RESULT_NOT_TESTED: 0,
         }
         for a in all_assigns:
-            if a.result in stats: stats[a.result] += 1
-            else: stats[RESULT_NOT_TESTED] += 1
+            if a.result in stats: 
+                stats[a.result] += 1
+            
+            if a.result == RESULT_NOT_TESTED:
+                user = a.tester
+                if user.username not in stats["testers"]:
+                    stats["testers"][user.username] = 0
+                stats["testers"][user.username] += 1
+
         stats["percentage"] = 0 if count == 0 else int(round(100 * (count - stats[RESULT_NOT_TESTED]) / count, 0))
         return stats
 
