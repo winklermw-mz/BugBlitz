@@ -25,14 +25,18 @@ class Project(db.Model):
 
             assignments = TestRunAssignment.query.filter_by(test_run_id=run.id).all()
             open_tests = []
+            total_open = []
             for assignment in assignments:
-                if assignment.tester_id == user.id and assignment.result == RESULT_NOT_TESTED:
-                    open_tests.append(assignment)
+                if assignment.result == RESULT_NOT_TESTED:
+                    if assignment.tester_id == user.id:
+                        open_tests.append(assignment)
+                    total_open.append(assignment)
             
             if open_tests or user.is_test_manager():
                 my_runs[run.id] = {
                     "run": run, 
                     "open_tests": len(open_tests),
+                    "total_open": len(total_open),
                     "overdue": run.is_overdue(),
                     "state": run.status,
                     "project": self.title,

@@ -36,7 +36,7 @@
                             <small><small>{{ run['project'] }}</small></small><br>
                             <hr>
                             <small>
-                                {% if run['open_tests'] == 0 and run['state'] == state_active %}
+                                {% if run['total_open'] == 0 and run['state'] == state_active %}
                                     <span class="badge bg-warning">ready for closing</span>
                                 {% endif %}
 
