@@ -159,7 +159,7 @@
                         <label class="form-label fw-bold">Result of test case</label>
                         <div class="row">
                             <div class="col-md-2">
-                                <select name="status" class="form-select">
+                                <select name="status" class="form-select test-result-select" data-assignment-id="{{ assign.id }}">
                                     <option value="{{ ok }}" {% if assign.result == ok %}selected{% endif %}>OK</option>
                                     <option value="{{ failed }}" {% if assign.result == failed %}selected{% endif %}>Failed</option>
                                     <option value="{{ blocked }}" {% if assign.result == blocked %}selected{% endif %}>Blocked</option>
@@ -170,7 +170,8 @@
                                 <textarea name="comment" class="form-control" placeholder="Comment">{{ assign.comment or '' }}</textarea>
                             </div>
                             <div class="col-md-2">
-                                <button type="submit" class="btn btn-secondary w-100">Save</button>
+                                {% set result_class = {ok: 'success', failed: 'danger', blocked: 'warning', not_tested: 'secondary'}.get(assign.result, 'secondary') %}
+                                <button type="submit" class="btn btn-{{ result_class }} w-100 save-result-button" data-assignment-id="{{ assign.id }}">Save</button>
                             </div>
                         </div>
                     </div>
@@ -258,12 +259,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             let show = true;
 
-            // Filter: nur eigene
             if (mine.checked && assignUser !== userId) {
                 show = false;
             }
 
-            // Filter: nur nicht getestete
             if (notTested.checked && result !== "{{ not_tested }}") {
                 show = false;
             }
@@ -276,6 +275,40 @@ document.addEventListener("DOMContentLoaded", function () {
     notTested.addEventListener("change", applyFilters);
 
     applyFilters();
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const colorMap = {
+        "{{ ok }}": "success",
+        "{{ failed }}": "danger",
+        "{{ blocked }}": "warning",
+        "{{ not_tested }}": "secondary"
+    };
+    
+    function updateSaveButtonColor(selectElement) {
+        const selectedResult = selectElement.value;
+        const assignmentId = selectElement.getAttribute("data-assignment-id");
+        const saveButton = document.querySelector(`.save-result-button[data-assignment-id="${assignmentId}"]`);
+
+        if (saveButton) {
+            saveButton.classList.forEach(className => {
+                if (className.startsWith('btn-')) {
+                    saveButton.classList.remove(className);
+                }
+            });
+            
+            const color = colorMap[selectedResult] || 'secondary';
+            saveButton.classList.add(`btn-${color}`);
+        }
+    }
+
+    document.querySelectorAll(".test-result-select").forEach(selectElement => {
+        updateSaveButtonColor(selectElement); 
+        
+        selectElement.addEventListener("change", function() {
+            updateSaveButtonColor(this);
+        });
+    });
 });
 </script>
 
