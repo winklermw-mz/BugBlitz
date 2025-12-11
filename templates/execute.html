@@ -11,33 +11,33 @@
     {% if current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id) %}
     <div class="d-flex justify-content-end gap-2">
         {% if run.status == state_created %}
-            <a href="{{ url_for('edit_run', run_id=run.id) }}" class="btn btn-info">Edit Assignments</a>
+            <a href="{{ url_for('edit_run', run_id=run.id) }}" class="btn btn-secondary">Edit Assignments</a>
             
             <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
                 <input type="hidden" name="status" value="{{ state_active }}">
-                <button type="submit" class="btn btn-success">Start</button>
+                <button type="submit" class="btn btn-secondary">Start</button>
             </form>
         {% endif %}
         
         {% if run.status == state_active %}
             <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to reset the test plan for modifications? During this operation test execution is suspended.');">
                 <input type="hidden" name="status" value="{{ state_created }}">
-                <button type="submit" class="btn btn-info">Modify</button>
+                <button type="submit" class="btn btn-secondary">Modify</button>
             </form>
             
             <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
-                <button name="status" value="{{ state_finished }}" class="btn btn-primary">Finish</button>
+                <button name="status" value="{{ state_finished }}" class="btn btn-secondary">Finish</button>
             </form>
             <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to abort the test plan? Further testing will not be possible.');">
-                <button name="status" value="{{ state_aborted }}" class="btn btn-danger">Abort</button>
+                <button name="status" value="{{ state_aborted }}" class="btn btn-secondary">Abort</button>
             </form>
         {% elif run.status == state_aborted or run.status == state_finished %}
             <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
-                <button name="status" value="{{ state_active }}" class="btn btn-primary">Restart</button>
+                <button name="status" value="{{ state_active }}" class="btn btn-secondary">Restart</button>
             </form>
         {% endif %}
         
-        <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-light">Back</a>
+        <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-secondary">Back</a>
     </div>
     {% endif %}
 </div>
@@ -170,7 +170,7 @@
                                 <textarea name="comment" class="form-control" placeholder="Comment">{{ assign.comment or '' }}</textarea>
                             </div>
                             <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">Save</button>
+                                <button type="submit" class="btn btn-secondary w-100">Save</button>
                             </div>
                         </div>
                     </div>
@@ -206,41 +206,41 @@
 <div class="d-flex justify-content-start align-items-center mt-4 gap-2">
 {% if current_user.is_admin() or (current_user.is_test_manager() and run.project.owner_id == current_user.id) %}
     {% if run.status == state_created %}
-        <a href="{{ url_for('edit_run', run_id=run.id) }}" class="btn btn-info">Edit Assignments</a>
+        <a href="{{ url_for('edit_run', run_id=run.id) }}" class="btn btn-secondary">Edit Assignments</a>
         <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
             <input type="hidden" name="status" value="{{ state_active }}">
-            <button type="submit" class="btn btn-success">Start</button>
+            <button type="submit" class="btn btn-secondary">Start</button>
         </form>
     {% endif %}
 
     {% if run.status == state_active %}
         <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to reset the test plan for modifications? During this operation test execution is suspended.');">
             <input type="hidden" name="status" value="{{ state_created }}">
-            <button type="submit" class="btn btn-info">Modify</button>
+            <button type="submit" class="btn btn-secondary">Modify</button>
         </form>
     {% endif %}
     
     {% if run.status == state_active %}
         <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
             <input type="hidden" name="status" value="{{ state_finished }}">
-            <button type="submit" class="btn btn-primary">Finish</button>
+            <button type="submit" class="btn btn-secondary">Finish</button>
         </form>
     {% endif %}
 
     {% if run.status == state_active %}
         <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Do you really want to abort the test plan? Further testing will not be possible.');">
             <input type="hidden" name="status" value="{{ state_aborted }}">
-            <button type="submit" class="btn btn-danger">Abort</button>
+            <button type="submit" class="btn btn-secondary">Abort</button>
         </form>
     {% endif %}
 
     {% if run.status == state_aborted or run.status == state_finished %}
         <form action="{{ url_for('update_run_status', run_id=run.id) }}" method="POST" class="d-inline">
-            <button name="status" value="{{ state_active }}" class="btn btn-primary">Restart</button>
+            <button name="status" value="{{ state_active }}" class="btn btn-secondary">Restart</button>
         </form>
     {% endif %}
 
-    <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-light">Back</a>
+    <a href="{{ url_for('view_project', project_id=run.project.id) }}" class="btn btn-secondary">Back</a>
 {% endif %}
 </div>
 

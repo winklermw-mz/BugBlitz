@@ -4,7 +4,7 @@
     <h2>Dashboard</h2>
     
     {% if current_user.is_test_manager() or current_user.is_admin() %}
-    <a href="{{ url_for('create_project') }}" class="btn btn-primary">+ New Project</a>
+    <a href="{{ url_for('create_project') }}" class="btn btn-secondary">+ New Project</a>
     {% endif %}
 </div>
 
@@ -29,7 +29,7 @@
             <div class="col">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body position-relative">
-                        <a href="{{ url_for('execute_run', run_id=id) }}" class="btn btn-sm btn-outline-primary position-absolute" style="top: 10px; right: 10px;">Open</a>
+                        <a href="{{ url_for('execute_run', run_id=id) }}" class="btn btn-sm btn-secondary position-absolute" style="top: 10px; right: 10px;">Open</a>
 
                         <h5 class="card-title pe-5">
                             {{ run['run'].title }}<br>

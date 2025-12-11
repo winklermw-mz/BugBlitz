@@ -18,7 +18,7 @@
             </div>
             {% endfor %}
 
-            <button type="submit" name="create" class="btn btn-primary mt-2">Create</button>
+            <button type="submit" name="create" class="btn btn-secondary mt-2">Create</button>
         </form>
     </div>
 
@@ -38,12 +38,12 @@
                     <td>
                         {% if u.username != admin_id %}
                         <form method="GET" action="{{ url_for('edit_user', user_id=u.id) }}" style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-primary">Open</button>
+                            <button type="submit" class="btn btn-sm btn-secondary">Open</button>
                         </form>
 
                         <form method="POST" style="display:inline;" onsubmit="return confirm('Delete user now?');">
                             <input type="hidden" name="user_id" value="{{ u.id }}">
-                            <button type="submit" name="delete" class="btn btn-sm btn-danger">Delete</button>
+                            <button type="submit" name="delete" class="btn btn-sm btn-secondary">Delete</button>
                         </form>
                         {% endif %}
                     </td>

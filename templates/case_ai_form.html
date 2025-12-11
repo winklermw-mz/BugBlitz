@@ -10,14 +10,14 @@
 
 <form method="POST" action="{{ url_for('extract_case_ai', project_id=project.id) }}" id="aiCaseForm">
     <div class="mb-3">
-        <label for="requirement" class="form-label">Requirement (Plaintext)</label>
+        <label for="requirement" class="form-label">Requirement</label>
         <textarea name="requirement" id="requirement" class="form-control" rows="10" required
             placeholder="Example: The user must be able to log in..."></textarea>
     </div>
 </form>
 
 <div class="d-flex gap-2">
-    <button type="button" class="btn btn-primary" onclick="submitFormAndShowModal()" id="generateBtn">
+    <button type="button" class="btn btn-secondary" onclick="submitFormAndShowModal()" id="generateBtn">
         <i class="fas fa-magic"></i> Generate Test Cases
     </button>
     <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
