@@ -62,6 +62,8 @@
                 Not Tested ({{ stats[not_tested] }})
             </div>
         </div>
+
+        {% if stats[not_tested] > 0 %}
         <br>
         <div class="d-flex justify-content-end">
             <div class="progress" style="height: 30px; width: {{ 0 if stats['total'] == 0 else stats[not_tested] / stats['total'] * 100 }}%;">
@@ -73,6 +75,7 @@
             {% endfor %}
             </div>
         </div>
+        {% endif %}
         
         <div class="mt-3 text-center">
             <strong>Completion: </strong> {{ stats[ok] + stats[failed] + stats[blocked] }} of {{ stats['total'] }} test cases ({{ stats['percentage'] }}%)
