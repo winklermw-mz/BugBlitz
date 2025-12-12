@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Edit User</h2>
+<h2>{% if is_self_edit %}Edit Profile{% else %}Edit User{% endif %}</h2>
 
 <form method="POST" class="card p-4">
 
+    {% if not is_self_edit %}
     <div class="mb-3">
         <label class="form-label">Username</label>
         <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
     </div>
+    {% endif %}
 
     <div class="mb-3">
         <label class="form-label">Email address</label>
@@ -21,21 +23,31 @@
     <input type="password" name="password_repeat" placeholder="Password confirmation" class="form-control mb-3">
 
     <hr>
-
     <h5>Roles</h5>
-    {% for role in all_roles %}
-    <div class="form-check">
-        <input class="form-check-input" type="checkbox"
-               name="roles" value="{{ role.name }}"
-               id="role_{{ role.id }}"
-               {% if role in user.roles %}checked{% endif %}>
-        <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }}</label>
-    </div>
-    {% endfor %}
+
+    {% if not is_self_edit %}
+        {% for role in all_roles %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox"
+                name="roles" value="{{ role.name }}"
+                id="role_{{ role.id }}"
+                {% if role in user.roles %}checked{% endif %}>
+            <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }}</label>
+        </div>
+        {% endfor %}
+    {% else %}
+        <span>
+            {% for role in current_user.roles %}
+            <span class="badge bg-primary">{{ role.name }}</span>
+            {% endfor %}
+        </span>
+    {% endif %}
 
     <div class="d-flex justify-content-start gap-2 mt-3">
-        <button type="submit" class="btn btn-secondary">Save Changes</button>
-        <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">Cancel</a>
+        <div class="d-flex justify-content-start gap-2 mt-3">
+            <button type="submit" class="btn btn-secondary">Save Changes</button>
+            <a href="{% if is_self_edit %}{{ url_for('dashboard') }}{% else %}{{ url_for('admin_users') }}{% endif %}" class="btn btn-secondary">Cancel</a>
+        </div>
     </div>
 </form>
 

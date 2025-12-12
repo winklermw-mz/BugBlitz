@@ -45,41 +45,65 @@ def route_user_administration():
     return render_template('admin.html', users=users, all_roles=all_roles, admin_id=USER_ADMIN)
 
 # ROUTE: Modify user
-def route_user_edit(user_id: int):
-    if not current_user.is_admin():
+def route_user_edit(user_id: int, is_self_edit: bool = False):
+    if not current_user.is_admin() and not is_self_edit:
         abort(403)
 
-    user = User.query.get_or_404(user_id)
+    if is_self_edit and current_user.id != user_id:
+        abort(403)
+
+    if is_self_edit:
+        user = current_user
+    else:
+        user = User.query.get_or_404(user_id)
+
     all_roles = Role.query.all()
 
     if request.method == 'POST':
-        username = str(request.form.get('username'))
+        if is_self_edit:
+            username = user.username
+        else:
+            username = str(request.form.get('username'))
+        
         email = str(request.form.get('email'))
-        roles = request.form.getlist('roles')
         pwd = str(request.form.get('password'))
         pwd2 = str(request.form.get('password_repeat'))
 
         if pwd or pwd2:
             if pwd != pwd2:
                 flash("Error: Passwords do not match.")
-                return redirect(url_for('edit_user', user_id=user.id))
+                if is_self_edit:
+                    return redirect(url_for('edit_profile'))
+                else:
+                    return redirect(url_for('edit_user', user_id=user.id))
+            
             user.password_hash = generate_password_hash(pwd, method='scrypt')
 
         existing = User.query.filter_by(email=email).first()
         if existing and existing.id != user.id:
             flash("Error: Email address is already in use.")
-            return redirect(url_for('edit_user', user_id=user.id))
+            if is_self_edit:
+                return redirect(url_for('edit_profile'))
+            else:
+                return redirect(url_for('edit_user', user_id=user.id))
 
-        user.username = username
         user.email = email
-        user.roles = []
-        for role_name in roles:
-            r = Role.query.filter_by(name=role_name).first()
-            if r:
-                user.roles.append(r)
+        
+        if not is_self_edit:
+            roles = request.form.getlist('roles')
+            user.username = username
+            user.roles = []
+            for role_name in roles:
+                r = Role.query.filter_by(name=role_name).first()
+                if r:
+                    user.roles.append(r)
 
         db.session.commit()
         flash("User updated.")
-        return redirect(url_for('admin_users'))
+        
+        if is_self_edit:
+            return redirect(url_for('dashboard'))
+        else:
+            return redirect(url_for('admin_users'))
 
-    return render_template('user_form.html', user=user, all_roles=all_roles)
+    return render_template('user_form.html', user=user, all_roles=all_roles, is_self_edit=is_self_edit)

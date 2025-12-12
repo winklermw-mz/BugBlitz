@@ -54,6 +54,12 @@ def admin_users():
 def edit_user(user_id: int):
     return route_user_edit(user_id)
 
+@app.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    from flask_login import current_user
+    return route_user_edit(current_user.id, is_self_edit=True)
+
 @app.route('/project/new', methods=['GET', 'POST'])
 @login_required
 def create_project():

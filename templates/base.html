@@ -27,14 +27,16 @@
                 </span>
                 
                 {% if current_user.is_admin() %}
-                <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-light me-2">User Management</a>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-light me-2"><i class="bi bi-people-fill"></i></a>
                 {% endif %}
 
-                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger">Logout</a>&nbsp;
-                
-                <button type="button" class="btn btn-sm btn-light me-2" data-bs-toggle="modal" data-bs-target="#copyrightModal" aria-label="Copyright Informationen">
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-sm btn-light me-2" aria-label="Edit Profile">
+                    <i class="bi bi-person-fill"></i>
+                </a>
+                <button type="button" class="btn btn-sm btn-light me-2" data-bs-toggle="modal" data-bs-target="#copyrightModal" aria-label="Copyright Information">
                     <i class="bi bi-info-circle-fill"></i>
                 </button>
+                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger"><i class="bi bi-power"></i></a>&nbsp;
             </div>
             {% endif %}
         </div>
