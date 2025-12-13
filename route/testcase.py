@@ -119,7 +119,7 @@ def route_testcase_ai_prepare(project_id: int):
     return render_template('case_ai_form.html', project=project)
 
 # ROUTE: Store AI generated test cases
-def route_testcase_ai_gen(project_id: int, host: str, key: str, model: str):
+def route_testcase_ai_gen(project_id: int, host: str):
     project = Project.query.get_or_404(project_id)
     if not (current_user.is_admin() or (current_user.is_test_manager() and project.owner_id == current_user.id)): 
         abort(403)
@@ -131,7 +131,7 @@ def route_testcase_ai_gen(project_id: int, host: str, key: str, model: str):
         return redirect(url_for('create_case_ai_form', project_id=project.id))
 
     try:
-        generated_cases_data = call_ai_model(requirement_text, host, key, model)
+        generated_cases_data = call_ai_model(requirement_text, host)
     except Exception as e:
         flash(f"Error: AI model returned an invalid response: {e}", "error")
         return redirect(url_for('create_case_ai_form', project_id=project.id))

@@ -1,24 +1,25 @@
 import json
-from openai import OpenAI
+import requests
 from model.testcase import PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 
 
-def call_ai_model(requirement: str, host: str, api_key:str, model: str) -> list:
-    client = OpenAI(base_url=host, api_key=api_key)
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": get_system_prompt(),
-            },
-            {
-                "role": "user",
-                "content": f"Die Anforderung lautet: {requirement}"
-            }
-        ]
+def call_ai_model(requirement: str, host: str) -> list:
+    payload = [
+        {
+            "role": "system",
+            "content": get_system_prompt(),
+        },
+        {
+            "role": "user",
+            "content": f"Die Anforderung lautet: {requirement}"
+        }
+    ]
+    response = requests.post(
+        host, 
+        headers={"Content-Type": "application/json"}, 
+        data=json.dumps(payload)
     )
-    return json.loads(str(response.choices[0].message.content))
+    return json.loads(json.loads(response.text)["text"])
 
 def get_system_prompt() -> str:
     return f"""

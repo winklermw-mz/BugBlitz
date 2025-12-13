@@ -104,7 +104,7 @@ def create_case_ai_form(project_id: int):
 @app.route('/project/<int:project_id>/case/ai/extract', methods=['POST'])
 @login_required
 def extract_case_ai(project_id: int):
-    return route_testcase_ai_gen(project_id, LLM_HOST, LLM_API_KEY, LLM_MODEL)
+    return route_testcase_ai_gen(project_id, LLM_HOST)
 
 @app.route('/project/<int:project_id>/run/new', methods=['GET', 'POST'])
 @login_required
