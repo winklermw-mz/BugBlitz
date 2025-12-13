@@ -20,6 +20,6 @@ COPY utils /app/utils
 COPY route /app/route
 COPY app.py /app/app.py
 
-EXPOSE 8100
+EXPOSE 8003
 
 CMD ["python", "app.py"]

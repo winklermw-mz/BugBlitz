@@ -64,7 +64,7 @@ Users can be assigned multiple roles, allowing for complex permission structures
     ```bash
     python app.py
     ```
-    The application will be accessible at `http://127.0.0.1:8100/`.
+    The application will be accessible at `http://127.0.0.1:8003/`.
 
 ## Initial Credentials
 
