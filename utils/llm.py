@@ -3,17 +3,20 @@ import requests
 from model.testcase import PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_NORMAL
 
 
-def call_ai_model(requirement: str, host: str) -> list:
-    payload = [
-        {
-            "role": "system",
-            "content": get_system_prompt(),
-        },
-        {
-            "role": "user",
-            "content": f"Die Anforderung lautet: {requirement}"
-        }
-    ]
+def call_ai_model(requirement: str, host: str, model: str) -> list:
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": get_system_prompt(),
+            },
+            {
+                "role": "user",
+                "content": f"Die Anforderung lautet: {requirement}"
+            }
+        ]
+    }
     response = requests.post(
         host, 
         headers={"Content-Type": "application/json"}, 

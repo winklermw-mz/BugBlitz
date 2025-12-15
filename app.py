@@ -11,8 +11,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = setup_database(app)
 login_manager = setup_login_manager(app)
 
-LLM_HOST = os.getenv("LLM_HOST", "http://localhost:1234/v1")
-LLM_API_KEY = os.getenv("LLM_API_KEY", "lm-studio")
+LLM_HOST = os.getenv("LLM_HOST", "http://localhost:8001/v1/chat/completions")
 LLM_MODEL = os.getenv("LLM_MODEL", "qwen/qwen3-vl-4b")
 
 from model.user import User
@@ -104,7 +103,7 @@ def create_case_ai_form(project_id: int):
 @app.route('/project/<int:project_id>/case/ai/extract', methods=['POST'])
 @login_required
 def extract_case_ai(project_id: int):
-    return route_testcase_ai_gen(project_id, LLM_HOST)
+    return route_testcase_ai_gen(project_id, LLM_HOST, LLM_MODEL)
 
 @app.route('/project/<int:project_id>/run/new', methods=['GET', 'POST'])
 @login_required
